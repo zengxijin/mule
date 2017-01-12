@@ -27,6 +27,7 @@ import org.mule.runtime.api.metadata.descriptor.builder.ParameterMetadataDescrip
 import org.mule.runtime.api.metadata.resolving.InputTypeResolver;
 import org.mule.runtime.api.metadata.resolving.MetadataFailure;
 import org.mule.runtime.api.metadata.resolving.MetadataResult;
+import org.mule.runtime.api.metadata.resolving.NamedTypeResolver;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -61,6 +62,10 @@ class MetadataInputDelegate extends BaseMetadataDelegate {
     }
     List<MetadataFailure> failures = results.stream().flatMap(e -> e.getFailures().stream()).collect(toList());
     return failures.isEmpty() ? success(input.build()) : failure(input.build(), failures);
+  }
+
+  public NamedTypeResolver getParameterResolver(String parameterName) {
+    return resolverFactory.getInputResolver(parameterName);
   }
 
   /**

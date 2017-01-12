@@ -59,7 +59,7 @@ public class EntityMetadataMediator {
             .withReason("There are at least one key that contains childs")
             .withFailureCode(INVALID_METADATA_KEY).onKeys());
       }
-      return success(keyBuilder.add(queryEntityResolver.getClass().getSimpleName(), entityKeys).build());
+      return success(keyBuilder.add(queryEntityResolver.getResolverName(), entityKeys).build());
     } catch (Exception e) {
       return failure(newFailure(e).onKeys());
     }

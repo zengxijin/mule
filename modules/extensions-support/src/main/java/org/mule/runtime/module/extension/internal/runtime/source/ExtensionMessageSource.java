@@ -11,11 +11,13 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.runtime.core.util.ExceptionUtils.extractConnectionException;
+import static org.mule.runtime.module.extension.internal.metadata.MetadataMediatorFactory.getSourceMetadataMediator;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getFieldValue;
 import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.getInitialiserEvent;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import org.mule.runtime.api.connection.ConnectionException;
+import org.mule.runtime.api.dsl.config.ComponentIdentifier;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
@@ -36,7 +38,6 @@ import org.mule.runtime.core.exception.ErrorTypeLocator;
 import org.mule.runtime.core.execution.ExceptionCallback;
 import org.mule.runtime.core.execution.MessageProcessContext;
 import org.mule.runtime.core.execution.MessageProcessingManager;
-import org.mule.runtime.api.dsl.config.ComponentIdentifier;
 import org.mule.runtime.extension.api.runtime.ConfigurationProvider;
 import org.mule.runtime.extension.api.runtime.source.Source;
 import org.mule.runtime.module.extension.internal.manager.ExtensionManagerAdapter;
@@ -82,7 +83,7 @@ public class ExtensionMessageSource extends ExtensionComponent implements Messag
   public ExtensionMessageSource(ExtensionModel extensionModel, SourceModel sourceModel, SourceAdapterFactory sourceAdapterFactory,
                                 ConfigurationProvider configurationProvider, RetryPolicyTemplate retryPolicyTemplate,
                                 ExtensionManagerAdapter managerAdapter) {
-    super(extensionModel, sourceModel, configurationProvider, managerAdapter);
+    super(extensionModel, sourceModel, configurationProvider, managerAdapter, getSourceMetadataMediator(sourceModel));
     this.sourceModel = sourceModel;
     this.sourceAdapterFactory = sourceAdapterFactory;
     this.retryPolicyTemplate = retryPolicyTemplate;

@@ -12,13 +12,12 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mule.runtime.api.metadata.MetadataKeyBuilder.newKey;
-import static org.mule.test.metadata.extension.query.NativeQueryOutputResolver.CIRCLE_TYPE;
-import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.toMetadataType;
 import static org.mule.tck.junit4.matcher.MetadataKeyMatcher.metadataKeyWithId;
 import static org.mule.test.metadata.extension.query.MetadataExtensionEntityResolver.CIRCLE;
 import static org.mule.test.metadata.extension.query.MetadataExtensionEntityResolver.SQUARE;
+import static org.mule.test.metadata.extension.query.NativeQueryOutputResolver.CIRCLE_TYPE;
 import static org.mule.test.metadata.extension.query.NativeQueryOutputResolver.NATIVE_QUERY;
-
+import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.toMetadataType;
 import org.mule.metadata.api.model.ArrayType;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.NumberType;
@@ -71,8 +70,7 @@ public class QueryMetadataTestCase extends MetadataExtensionFunctionalTestCase {
     MetadataResult<ComponentMetadataDescriptor> entityMetadata = getComponentDynamicMetadata(dsqlKey);
     assertThat(entityMetadata.isSuccess(), is(true));
 
-    TypeMetadataDescriptor descriptor = entityMetadata.get().getOutputMetadata().getPayloadMetadata();
-    MetadataType generatedType = descriptor.getType();
+    MetadataType generatedType = entityMetadata.get().getModel().getOutput().getType();
     assertThat(generatedType, is(instanceOf(ArrayType.class)));
 
     ObjectType fields = (ObjectType) ((ArrayType) generatedType).getType();
@@ -89,7 +87,6 @@ public class QueryMetadataTestCase extends MetadataExtensionFunctionalTestCase {
     MetadataResult<ComponentMetadataDescriptor> entityMetadata = getComponentDynamicMetadata(nativeKey);
 
     assertThat(entityMetadata.isSuccess(), is(true));
-    TypeMetadataDescriptor output = entityMetadata.get().getOutputMetadata().getPayloadMetadata();
-    assertThat(output.getType(), is(CIRCLE_TYPE));
+    assertThat(entityMetadata.get().getModel().getOutput().getType(), is(CIRCLE_TYPE));
   }
 }

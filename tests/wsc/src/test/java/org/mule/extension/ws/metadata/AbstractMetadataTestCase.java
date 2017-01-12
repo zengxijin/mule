@@ -53,7 +53,9 @@ public abstract class AbstractMetadataTestCase extends AbstractSoapServiceTestCa
   @Step("Retrieve Dynamic Metadata for the Message Builder parameter")
   protected ObjectType getMessageBuilderType(String flow, String key) {
     MetadataResult<ComponentMetadataDescriptor> metadata = getMetadata(flow, key);
-    return toObjectType(metadata.get().getInputMetadata().getParameterMetadata(MESSAGE_PARAM).getType());
+    return toObjectType(metadata.get().getModel().getAllParameterModels().stream()
+        .filter(p -> p.getName().equals(MESSAGE_PARAM))
+        .findFirst().get().getType());
   }
 
   protected ProcessorId id(String flow) {

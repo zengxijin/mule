@@ -100,13 +100,14 @@ public abstract class ExtensionComponent extends AbstractAnnotatedObject
   protected ExtensionComponent(ExtensionModel extensionModel,
                                ComponentModel componentModel,
                                ConfigurationProvider configurationProvider,
-                               ExtensionManagerAdapter extensionManager) {
+                               ExtensionManagerAdapter extensionManager,
+                               MetadataMediator metadataMediator) {
     this.extensionModel = extensionModel;
     this.classLoader = getClassLoader(extensionModel);
     this.componentModel = componentModel;
     this.configurationProvider = configurationProvider;
     this.extensionManager = extensionManager;
-    this.metadataMediator = new MetadataMediator(componentModel);
+    this.metadataMediator = metadataMediator;
     this.typeLoader = ExtensionsTypeLoaderFactory.getDefault().createTypeLoader(classLoader);
   }
 

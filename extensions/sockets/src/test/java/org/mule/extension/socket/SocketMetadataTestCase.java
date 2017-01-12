@@ -70,11 +70,11 @@ public class SocketMetadataTestCase extends SocketExtensionTestCase {
   public void resolveMetadata() {
     ComponentMetadataDescriptor metadataWithOutResponse =
         service.getMetadata(new ProcessorId("tcp-send-without-response", "0")).get();
-    assertThat(metadataWithOutResponse.getOutputMetadata().getPayloadMetadata().getType(),
+    assertThat(metadataWithOutResponse.getModel().getOutput().getType(),
                is(instanceOf(AnyType.class)));
 
     ComponentMetadataDescriptor metadataWithResponse = service.getMetadata(new ProcessorId("tcp-send-with-response", "0")).get();
-    assertThat(metadataWithResponse.getOutputMetadata().getPayloadMetadata().getType(),
+    assertThat(metadataWithResponse.getModel().getOutput().getType(),
                is(instanceOf(BinaryType.class)));
   }
 }

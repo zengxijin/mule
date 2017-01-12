@@ -13,11 +13,12 @@ import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.startIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
+import static org.mule.runtime.core.api.rx.Exceptions.checkedFunction;
+import static org.mule.runtime.core.api.rx.Exceptions.rxExceptionToMuleException;
 import static org.mule.runtime.core.el.mvel.MessageVariableResolverFactory.FLOW_VARS;
 import static org.mule.runtime.core.util.ClassUtils.withContextClassLoader;
 import static org.mule.runtime.core.util.StringUtils.isBlank;
-import static org.mule.runtime.core.api.rx.Exceptions.checkedFunction;
-import static org.mule.runtime.core.api.rx.Exceptions.rxExceptionToMuleException;
+import static org.mule.runtime.module.extension.internal.metadata.MetadataMediatorFactory.getOperationMetadataMediator;
 import static org.mule.runtime.module.extension.internal.runtime.ExecutionTypeMapper.asProcessingType;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.isVoid;
 import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.getClassLoader;
@@ -28,6 +29,7 @@ import static reactor.core.publisher.Flux.from;
 import static reactor.core.publisher.Mono.fromCallable;
 import static reactor.core.publisher.Mono.just;
 import org.mule.runtime.api.connection.ConnectionException;
+import org.mule.runtime.api.dsl.config.ComponentIdentifier;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.Lifecycle;
@@ -46,7 +48,6 @@ import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.policy.OperationExecutionFunction;
 import org.mule.runtime.core.policy.OperationPolicy;
 import org.mule.runtime.core.policy.PolicyManager;
-import org.mule.runtime.api.dsl.config.ComponentIdentifier;
 import org.mule.runtime.extension.api.runtime.ConfigurationInstance;
 import org.mule.runtime.extension.api.runtime.ConfigurationProvider;
 import org.mule.runtime.extension.api.runtime.operation.OperationExecutor;
@@ -116,7 +117,7 @@ public class OperationMessageProcessor extends ExtensionComponent implements Pro
                                    ResolverSet resolverSet,
                                    ExtensionManagerAdapter extensionManager,
                                    PolicyManager policyManager) {
-    super(extensionModel, operationModel, configurationProvider, extensionManager);
+    super(extensionModel, operationModel, configurationProvider, extensionManager, getOperationMetadataMediator(operationModel));
     this.extensionModel = extensionModel;
     this.operationModel = operationModel;
     this.resolverSet = resolverSet;

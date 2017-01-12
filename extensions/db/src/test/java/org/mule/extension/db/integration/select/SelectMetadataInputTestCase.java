@@ -40,7 +40,9 @@ public class SelectMetadataInputTestCase extends AbstractDbIntegrationTestCase {
     MetadataResult<ComponentMetadataDescriptor> metadata = getMetadata("selectMetadata", "select * from PLANET");
 
     assertThat(metadata.isSuccess(), is(true));
-    assertThat(metadata.get().getInputMetadata().getParameterMetadata("inputParameters").getType(),
+    assertThat(metadata.get().getModel().getAllParameterModels().stream()
+        .filter(p -> p.getName().equals("inputParameters"))
+        .findFirst().get().getType(),
                is(instanceOf(NullType.class)));
   }
 
@@ -52,7 +54,9 @@ public class SelectMetadataInputTestCase extends AbstractDbIntegrationTestCase {
                     "select * from PLANET where id = #[payload.id] and name = #[message.outboundProperties.updateCount]");
 
     assertThat(metadata.isSuccess(), is(true));
-    assertThat(metadata.get().getInputMetadata().getParameterMetadata("inputParameters").getType(),
+    assertThat(metadata.get().getModel().getAllParameterModels().stream()
+        .filter(p -> p.getName().equals("inputParameters"))
+        .findFirst().get().getType(),
                is(typeBuilder.anyType().build()));
   }
 
@@ -62,8 +66,9 @@ public class SelectMetadataInputTestCase extends AbstractDbIntegrationTestCase {
                                                                        "select * from PLANET where id = :id and name = :name");
 
     assertThat(metadata.isSuccess(), is(true));
-    ObjectType type =
-        (ObjectType) metadata.get().getInputMetadata().getParameterMetadata("inputParameters").getType();
+    ObjectType type = (ObjectType) metadata.get().getModel().getAllParameterModels().stream()
+        .filter(p -> p.getName().equals("inputParameters"))
+        .findFirst().get().getType();
     assertThat(type.getFields().size(), equalTo(2));
 
     Optional<ObjectFieldType> id = type.getFieldByName("id");

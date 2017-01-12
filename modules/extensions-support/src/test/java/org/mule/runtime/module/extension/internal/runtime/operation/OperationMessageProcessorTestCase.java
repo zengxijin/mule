@@ -45,7 +45,9 @@ import static reactor.core.publisher.Mono.empty;
 import static reactor.core.publisher.Mono.just;
 import org.mule.metadata.api.annotation.DescriptionAnnotation;
 import org.mule.metadata.api.builder.BaseTypeBuilder;
+import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.ObjectType;
+import org.mule.runtime.api.dsl.config.ComponentIdentifier;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Attributes;
 import org.mule.runtime.api.meta.model.ComponentModel;
@@ -56,8 +58,6 @@ import org.mule.runtime.api.metadata.MetadataKey;
 import org.mule.runtime.api.metadata.MetadataKeysContainer;
 import org.mule.runtime.api.metadata.MetadataResolvingException;
 import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
-import org.mule.runtime.api.metadata.descriptor.OutputMetadataDescriptor;
-import org.mule.runtime.api.metadata.descriptor.TypeMetadataDescriptor;
 import org.mule.runtime.api.metadata.resolving.MetadataResult;
 import org.mule.runtime.api.metadata.resolving.OutputTypeResolver;
 import org.mule.runtime.core.api.Event;
@@ -68,7 +68,6 @@ import org.mule.runtime.core.api.processor.ReactiveProcessor.ProcessingType;
 import org.mule.runtime.core.el.DefaultExpressionManager;
 import org.mule.runtime.core.el.mvel.MVELExpressionLanguage;
 import org.mule.runtime.core.policy.OperationExecutionFunction;
-import org.mule.runtime.api.dsl.config.ComponentIdentifier;
 import org.mule.runtime.extension.api.model.ImmutableOutputModel;
 import org.mule.runtime.extension.api.runtime.operation.ExecutionContext;
 import org.mule.runtime.module.extension.internal.runtime.ExecutionContextAdapter;
@@ -322,17 +321,19 @@ public class OperationMessageProcessorTestCase extends AbstractOperationMessageP
 
     assertThat(metadata.isSuccess(), is(true));
 
-    OutputMetadataDescriptor outputMetadataDescriptor = metadata.get().getOutputMetadata();
+    MetadataType payloadMetadata = metadata.get().getModel().getOutput().getType();
+    assertThat(payloadMetadata, is(TYPE_BUILDER.booleanType().build()));
 
-    TypeMetadataDescriptor payloadMetadata = outputMetadataDescriptor.getPayloadMetadata();
-    assertThat(payloadMetadata.getType(), is(TYPE_BUILDER.booleanType().build()));
+    MetadataType attributesMetadata = metadata.get().getModel().getOutputAttributes().getType();
+    assertThat(attributesMetadata, is(TYPE_BUILDER.booleanType().build()));
 
-    TypeMetadataDescriptor attributesMetadata = outputMetadataDescriptor.getAttributesMetadata();
-    assertThat(attributesMetadata.getType(), is(TYPE_BUILDER.booleanType().build()));
+    assertThat(metadata.get().getModel().getAllParameterModels().stream()
+        .filter(p -> p.getName().equals("content"))
+        .findFirst().get().getType(), is(TYPE_BUILDER.stringType().build()));
 
-    assertThat(metadata.get().getInputMetadata().getParameterMetadata("content").getType(),
-               is(TYPE_BUILDER.stringType().build()));
-    assertThat(metadata.get().getInputMetadata().getParameterMetadata("type").getType(), is(stringType));
+    assertThat(metadata.get().getModel().getAllParameterModels().stream()
+        .filter(p -> p.getName().equals("type"))
+        .findFirst().get().getType(), is(stringType));
   }
 
   @Test
@@ -348,8 +349,9 @@ public class OperationMessageProcessorTestCase extends AbstractOperationMessageP
 
     final MetadataResult<ComponentMetadataDescriptor> metadata = messageProcessor.getMetadata();
     assertThat(metadata.isSuccess(), is(true));
-    OutputMetadataDescriptor outputMetadata = metadata.get().getOutputMetadata();
-    assertThat(outputMetadata.getPayloadMetadata().getType(), is(objectType));
+
+    MetadataType outputMetadata = metadata.get().getModel().getOutput().getType();
+    assertThat(outputMetadata, is(objectType));
 
     verify(resolverSet.getResolvers(), times(1));
   }

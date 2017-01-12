@@ -86,7 +86,7 @@ public class SelectMetadataOutputTestCase extends AbstractDbIntegrationTestCase 
   private ObjectType getSelectOutputMetadata(String query) throws RegistrationException {
     MetadataResult<ComponentMetadataDescriptor> metadata = getMetadata("selectMetadata", query);
     assertThat(metadata.isSuccess(), is(true));
-    ArrayType output = (ArrayType) metadata.get().getOutputMetadata().getPayloadMetadata().getType();
+    ArrayType output = (ArrayType) metadata.get().getModel().getOutput().getType();
     return (ObjectType) output.getType();
   }
 }

@@ -24,14 +24,14 @@ import org.mule.functional.junit4.ExtensionFunctionalTestCase;
 import org.mule.metadata.api.ClassTypeLoader;
 import org.mule.metadata.api.builder.BaseTypeBuilder;
 import org.mule.metadata.api.model.MetadataType;
+import org.mule.runtime.api.meta.Typed;
+import org.mule.runtime.api.meta.model.ComponentModel;
+import org.mule.runtime.api.meta.model.OutputModel;
 import org.mule.runtime.api.metadata.ComponentId;
 import org.mule.runtime.api.metadata.MetadataKey;
 import org.mule.runtime.api.metadata.MetadataKeysContainer;
 import org.mule.runtime.api.metadata.MetadataService;
 import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
-import org.mule.runtime.api.metadata.descriptor.OutputMetadataDescriptor;
-import org.mule.runtime.api.metadata.descriptor.ParameterMetadataDescriptor;
-import org.mule.runtime.api.metadata.descriptor.TypeMetadataDescriptor;
 import org.mule.runtime.api.metadata.resolving.FailureCode;
 import org.mule.runtime.api.metadata.resolving.MetadataComponent;
 import org.mule.runtime.api.metadata.resolving.MetadataFailure;
@@ -200,43 +200,35 @@ public abstract class MetadataExtensionFunctionalTestCase extends ExtensionFunct
     }
   }
 
-  void assertExpectedOutput(OutputMetadataDescriptor output, Type payloadType, Type attributesType) {
-    assertExpectedType(output.getPayloadMetadata(), payloadType);
-    assertExpectedType(output.getAttributesMetadata(), attributesType);
+  void assertExpectedOutput(ComponentModel model, Type payloadType, Type attributesType) {
+    assertExpectedOutput(model.getOutput(), model.getOutputAttributes(), TYPE_LOADER.load(payloadType),
+                         TYPE_LOADER.load(attributesType));
   }
 
-  void assertExpectedOutput(OutputMetadataDescriptor output, MetadataType payloadType, Type attributesType) {
-    assertExpectedType(output.getPayloadMetadata(), payloadType);
-    assertExpectedType(output.getAttributesMetadata(), attributesType);
+  void assertExpectedOutput(ComponentModel model, MetadataType payloadType, Type attributesType) {
+    assertExpectedOutput(model.getOutput(), model.getOutputAttributes(), payloadType, TYPE_LOADER.load(attributesType));
   }
 
-  void assertExpectedOutput(OutputMetadataDescriptor output, MetadataType payloadType, MetadataType attributesType) {
-    assertExpectedType(output.getPayloadMetadata(), payloadType);
-    assertExpectedType(output.getAttributesMetadata(), attributesType);
+  void assertExpectedOutput(ComponentModel model, MetadataType payloadType, MetadataType attributesType) {
+    assertExpectedOutput(model.getOutput(), model.getOutputAttributes(), payloadType, attributesType);
   }
 
-  private void assertExpectedType(TypeMetadataDescriptor descriptor, Type type) {
-    assertThat(descriptor.getType(), is(TYPE_LOADER.load(type)));
+  void assertExpectedOutput(OutputModel output, OutputModel attributes, MetadataType payloadType, MetadataType attributesType) {
+    assertExpectedType(output.getType(), payloadType);
+    assertExpectedType(attributes.getType(), attributesType);
   }
 
-  void assertExpectedType(ParameterMetadataDescriptor descriptor, String name, Type type) {
-    assertThat(descriptor.getType(), is(TYPE_LOADER.load(type)));
-    if (!isBlank(name)) {
-      assertThat(descriptor.getName(), is(name));
-    }
-    assertThat(descriptor.isDynamic(), is(false));
+  private void assertExpectedType(MetadataType type, MetadataType expectedType) {
+    assertThat(type, is(expectedType));
   }
 
-  private void assertExpectedType(TypeMetadataDescriptor descriptor, MetadataType type) {
-    assertThat(descriptor.getType(), is(type));
+  protected void assertExpectedType(Typed type, Type expectedType) {
+    assertThat(type.getType(), is(TYPE_LOADER.load(expectedType)));
   }
 
-  void assertExpectedType(ParameterMetadataDescriptor descriptor, String name, MetadataType type, boolean isDynamic) {
-    assertThat(descriptor.getType(), is(type));
-    if (!isBlank(name)) {
-      assertThat(descriptor.getName(), is(name));
-    }
-    assertThat(descriptor.isDynamic(), is(isDynamic));
+  protected void assertExpectedType(Typed typedModel, MetadataType expectedType, boolean isDynamic) {
+    assertThat(typedModel.getType(), is(expectedType));
+    assertThat(typedModel.hasDynamicType(), is(isDynamic));
   }
 
   Set<MetadataKey> getKeysFromContainer(MetadataKeysContainer metadataKeysContainer) {
