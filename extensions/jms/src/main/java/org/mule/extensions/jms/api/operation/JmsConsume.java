@@ -112,7 +112,7 @@ public final class JmsConsume {
       Message received = consumer.consume(maximumWaitUnit.toMillis(maximumWait));
 
       if (received != null) {
-        evaluateMessageAck(connection, ackMode, session, received);
+        evaluateMessageAck(connection, ackMode, session, received, config.getSessionManager());
         // If no explicit content type was provided to the operation, fallback to the
         // one communicated in the message properties. Finally if no property was set,
         // use the default one provided by the config

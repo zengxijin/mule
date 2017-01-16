@@ -8,6 +8,7 @@ package org.mule.extensions.jms.api.config;
 
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import org.mule.extensions.jms.JmsExtension;
+import org.mule.extensions.jms.JmsMessageSessionManager;
 import org.mule.extensions.jms.api.operation.JmsAck;
 import org.mule.extensions.jms.api.operation.JmsConsume;
 import org.mule.extensions.jms.api.operation.JmsPublish;
@@ -23,6 +24,7 @@ import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 
+import javax.inject.Inject;
 import javax.jms.Message;
 import javax.jms.Queue;
 import javax.jms.Topic;
@@ -36,6 +38,12 @@ import javax.jms.Topic;
 @Operations({JmsConsume.class, JmsPublish.class, JmsPublishConsume.class, JmsAck.class})
 @Sources({JmsListener.class})
 public class JmsConfig {
+
+  /**
+   *
+   */
+  @Inject
+  private JmsMessageSessionManager sessionManager;
 
   /**
    * the encoding of the {@link Message} {@code body}
@@ -73,6 +81,9 @@ public class JmsConfig {
   @Placement(tab = "Producer")
   private JmsProducerConfig producerConfig;
 
+  public JmsMessageSessionManager getSessionManager() {
+    return sessionManager;
+  }
 
   public String getContentType() {
     return contentType;

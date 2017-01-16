@@ -137,7 +137,7 @@ public class JmsPublishConsume {
 
       if (received != null) {
         ackMode = resolveOverride(config.getConsumerConfig().getAckMode(), ackMode);
-        evaluateMessageAck(connection, ackMode, session, received);
+        evaluateMessageAck(connection, ackMode, session, received, config.getSessionManager());
       }
 
       if (LOGGER.isDebugEnabled()) {

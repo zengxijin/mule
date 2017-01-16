@@ -100,7 +100,7 @@ public class ActiveMQConnectionFactoryProvider {
     if (maxRedelivery != REDELIVERY_IGNORE) {
       // redelivery = deliveryCount - 1, but AMQ is considering the first delivery attempt
       // as a redelivery (wrong!). adjust for it
-      maxRedelivery++;
+      //      maxRedelivery++;
     }
     setMaximumRedeliveriesMethod.invoke(redeliveryPolicy, maxRedelivery);
   }

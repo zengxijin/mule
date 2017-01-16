@@ -64,7 +64,6 @@ public class JmsConsumerConfig {
   @Parameter
   @Optional(defaultValue = "0")
   @Expression(NOT_SUPPORTED)
-  // TODO MULE-10958: duplicated in ActiveMQ for default factory creation
   private int maxRedelivery;
 
   public int getMaxRedelivery() {

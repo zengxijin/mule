@@ -12,7 +12,7 @@
 
     <sub-flow name="onIncomingConnection">
         <expression-component>
-            new org.mule.extensions.jms.test.JmsAbstractTestCase$OnIncomingConnection().onCall(message)
+            org.mule.extensions.jms.test.JmsAbstractTestCase$OnIncomingConnection().onCall(message)
         </expression-component>
     </sub-flow>
 

@@ -9,12 +9,14 @@ package org.mule.extensions.jms.api.operation;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.extensions.jms.api.config.AckMode;
+import org.mule.extensions.jms.api.config.JmsConfig;
 import org.mule.extensions.jms.api.connection.JmsConnection;
 import org.mule.extensions.jms.api.connection.JmsSession;
 import org.mule.extensions.jms.api.exception.JmsAckErrorTypeProvider;
 import org.mule.extensions.jms.api.exception.JmsAckException;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.Connection;
+import org.mule.runtime.extension.api.annotation.param.UseConfig;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import javax.jms.Message;
@@ -38,7 +40,7 @@ public final class JmsAck {
    * <p>
    * The {@code ackId} must refer to a {@link JmsSession} created using the current {@link JmsConnection}.
    * If the {@link JmsSession} or {@link JmsConnection} were closed, the ACK will fail.
-   * If the {@code ackId} does not belong to a {@link JmsSession} created using the current {@link JmsConnection}
+   * If the {@code ackId} does not belong to a {@link JmsSession} created using the current {@link JmsConnection}// TODO REVIEW
    *
    * @param connection the {@link JmsConnection} that created the {@link JmsSession} over which the ACK will be performed
    * @param ackId the {@link JmsSession#getAckId}
@@ -46,14 +48,14 @@ public final class JmsAck {
    * to a session of the current connection
    */
   @Throws(JmsAckErrorTypeProvider.class)
-  public void ack(@Connection JmsConnection connection, @Summary("The AckId of the Message to ACK") String ackId) {
+  public void ack(@UseConfig JmsConfig config, @Summary("The AckId of the Message to ACK") String ackId) {
 
     try {
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Performing ACK on session: " + ackId);
       }
 
-      connection.doAck(ackId);
+      config.getSessionManager().doAck(ackId);
 
     } catch (Exception e) {
       LOGGER.error(format("An error occurred while acking a message with ID [%s]: ", ackId), e);

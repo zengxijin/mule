@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:jmsn="http://www.mulesoft.org/schema/mule/jmsn"
+      xmlns:test="http://www.mulesoft.org/schema/mule/test"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+             http://www.mulesoft.org/schema/mule/test http://www.mulesoft.org/schema/mule/test/current/mule-test.xsd
+      http://www.mulesoft.org/schema/mule/jmsn http://www.mulesoft.org/schema/mule/jmsn/current/mule-jmsn.xsd">
+
+
+    <flow name="publisher">
+        <jmsn:publish destination="${topicListenerDestination}"/>
+    </flow>
+
+    <flow name="listener" initialState="stopped">
+        <jmsn:listener config-ref="config" destination="${topicListenerDestination}" ackMode="MANUAL"/>
+        <logger level="ERROR" message="#[payload]"/>
+        <flow-ref name="subFlow"/>
+        <!--<jmsn:ack ackId="#[dw:attributes.ackId.value]"/>-->
+        <!--<expression-component>-->
+            <!--new org.mule.extensions.jms.test.JmsAbstractTestCase$OnIncomingConnection().onCall(message)-->
+        <!--</expression-component>-->
+        <!--<test:component throwException="true"/>-->
+    </flow>
+
+    <flow name="listener2" initialState="stopped">
+        <jmsn:listener config-ref="config" destination="${topicListenerDestination}" ackMode="MANUAL"/>
+        <logger level="ERROR" message="#[payload]"/>
+        <flow-ref name="subFlow"/>
+
+        <!--<jmsn:ack ackId="#[dw:attributes.ackId.value]"/>-->
+        <!--<expression-component>-->
+        <!--new org.mule.extensions.jms.test.JmsAbstractTestCase$OnIncomingConnection().onCall(message)-->
+        <!--</expression-component>-->
+        <!--<test:component throwException="true"/>-->
+    </flow>
+
+    <sub-flow name="subFlow">
+        <jmsn:ack ackId="#[dw:attributes.ackId.value]"/>
+    </sub-flow>
+
+</mule>

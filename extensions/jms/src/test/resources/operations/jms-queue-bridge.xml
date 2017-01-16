@@ -26,7 +26,7 @@
     </flow>
 
     <flow name="bridge-receiver">
-        <jmsn:consume config-ref="config" destination="#[dw:finalDestination]" maximumWait="1000"/>
     </flow>
+    <jmsn:consume config-ref="config" destination="#[dw:finalDestination]" maximumWait="1000"/>
 
 </mule>

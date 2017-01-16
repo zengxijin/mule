@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:jmsn="http://www.mulesoft.org/schema/mule/jmsn"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/jmsn http://www.mulesoft.org/schema/mule/jmsn/current/mule-jmsn.xsd">
+
+    <!--<jmsn:config name="config">-->
+        <!--<jmsn:active-mq-connection>-->
+            <!--<jmsn:factory-configuration maxRedelivery="0"/>-->
+        <!--</jmsn:active-mq-connection>-->
+    <!--</jmsn:config>-->
+    <jmsn:config name="config">
+        <jmsn:active-mq-connection>
+            <!--<jmsn:factory-configuration brokerUrl="tcp://192.168.99.100:32768?persistent=false&amp;useJmx=true"/>-->
+            <jmsn:factory-configuration brokerUrl="tcp://192.168.99.100:32768" maxRedelivery="0"/>
+        </jmsn:active-mq-connection>
+    </jmsn:config>
+
+
+</mule>

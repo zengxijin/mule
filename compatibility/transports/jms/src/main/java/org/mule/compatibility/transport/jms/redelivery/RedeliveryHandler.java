@@ -7,6 +7,7 @@
 package org.mule.compatibility.transport.jms.redelivery;
 
 import org.mule.compatibility.core.api.endpoint.InboundEndpoint;
+import org.mule.compatibility.core.api.exception.EndpointMessageRedeliveredException;
 import org.mule.compatibility.transport.jms.JmsConnector;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.core.api.construct.FlowConstruct;

@@ -164,6 +164,7 @@ public abstract class JmsAbstractTestCase extends MuleArtifactFunctionalTestCase
     public Object onCall(MessageContext messageContext) {
       Message message = Message.builder().payload(messageContext.getPayload())
           .mediaType(messageContext.getDataType().getMediaType()).attributes(messageContext.getAttributes()).build();
+      System.out.println("Adding message with payload: " + message.getPayload().getValue());
       LOGGER.debug("Adding message with payload: " + message.getPayload().getValue());
       receivedMessages.add(message);
 

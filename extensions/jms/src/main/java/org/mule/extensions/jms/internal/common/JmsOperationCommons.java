@@ -11,7 +11,9 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.mule.extensions.jms.api.config.AckMode.MANUAL;
 import static org.mule.extensions.jms.api.config.AckMode.NONE;
 import static org.mule.extensions.jms.api.message.MessageBuilder.BODY_CONTENT_TYPE_JMS_PROPERTY;
+import static org.mule.extensions.jms.api.message.MessageBuilder.BODY_ENCODING_JMS_PROPERTY;
 import static org.slf4j.LoggerFactory.getLogger;
+import org.mule.extensions.jms.JmsMessageSessionManager;
 import org.mule.extensions.jms.api.config.AckMode;
 import org.mule.extensions.jms.api.connection.JmsConnection;
 import org.mule.extensions.jms.api.connection.JmsSession;
@@ -42,12 +44,23 @@ public final class JmsOperationCommons {
     }
   }
 
+  public static String resolveMessageEncoding(Message message, String defaultType) {
+    try {
+      String contentType = message.getStringProperty(BODY_ENCODING_JMS_PROPERTY);
+      return isBlank(contentType) ? defaultType : contentType;
+    } catch (JMSException e) {
+      LOGGER.warn(format("Failed to read the Message ContentType from its properties. A default value of [%s] will be used.",
+                         defaultType));
+      return defaultType;
+    }
+  }
+
   public static <T> T resolveOverride(T configValue, T operationValue) {
     return operationValue == null ? configValue : operationValue;
   }
 
   public static void evaluateMessageAck(JmsConnection connection, AckMode ackMode, JmsSession session,
-                                        Message received)
+                                        Message received, JmsMessageSessionManager messageSessionManager)
       throws JMSException {
     try {
       if (ackMode.equals(NONE)) {
@@ -63,6 +76,7 @@ public final class JmsOperationCommons {
         String id = session.getAckId()
             .orElseThrow(() -> new IllegalArgumentException("An AckId is required when MANUAL AckMode is set"));
 
+        messageSessionManager.registerMessageForAck(id, received);
         connection.registerMessageForAck(id, received);
       }
     } catch (JMSException e) {

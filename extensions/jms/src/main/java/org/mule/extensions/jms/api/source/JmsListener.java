@@ -8,8 +8,10 @@ package org.mule.extensions.jms.api.source;
 
 import static java.lang.String.format;
 import static org.mule.extensions.jms.api.config.AckMode.AUTO;
+import static org.mule.extensions.jms.api.config.AckMode.NONE;
 import static org.mule.extensions.jms.internal.common.JmsOperationCommons.evaluateMessageAck;
 import static org.mule.extensions.jms.internal.common.JmsOperationCommons.resolveMessageContentType;
+import static org.mule.extensions.jms.internal.common.JmsOperationCommons.resolveMessageEncoding;
 import static org.mule.extensions.jms.internal.common.JmsOperationCommons.resolveOverride;
 import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.extensions.jms.api.config.AckMode;
@@ -136,6 +138,8 @@ public class JmsListener extends Source<Object, JmsAttributes> {
     ackMode = resolveOverride(consumerConfig.getAckMode(), ackMode);
     selector = resolveOverride(consumerConfig.getSelector(), selector);
     encoding = resolveOverride(config.getEncoding(), encoding);
+    contentType = resolveOverride(config.getContentType(), encoding);
+    consumerType = resolveOverride(config.getConsumerConfig().getConsumerType(), consumerType);
 
     try {
       session = connection.createSession(ackMode, consumerType.isTopic());
@@ -152,7 +156,9 @@ public class JmsListener extends Source<Object, JmsAttributes> {
         SourceCallbackContext context = sourceCallback.createContext();
 
         if (message != null) {
+          //TODO change NONE ACK to end of flow
           evaluateAckAction(sourceCallback, session, message);
+          encoding = resolveEncoding(message);
           contentType = resolveContentType(message);
           saveMessageForAck(message, context);
           saveReplyToDestination(sourceCallback, message, context);
@@ -188,6 +194,14 @@ public class JmsListener extends Source<Object, JmsAttributes> {
 
   @OnError
   public void onError(Error error, SourceCallbackContext context) {
+    try {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred in the message process, recovering the session");
+      }
+      session.get().recover();
+    } catch (JMSException e) {
+      context.getSourceCallback().onSourceException(e);
+    }
     LOGGER.error(error.getDescription(), error.getCause());
   }
 
@@ -228,12 +242,13 @@ public class JmsListener extends Source<Object, JmsAttributes> {
     } catch (Exception e) {
       LOGGER.error("An error occurred while creating the initial message", e);
       sourceCallback.onSourceException(e);
+      throw new RuntimeException(e);
     }
   }
 
   private void evaluateAckAction(SourceCallback<Object, JmsAttributes> sourceCallback, JmsSession session, Message message) {
     try {
-      evaluateMessageAck(connection, ackMode, session, message);
+      evaluateMessageAck(connection, ackMode, session, message, config.getSessionManager());
     } catch (JMSException e) {
       LOGGER.error("An error occurred while processing an incoming message: ", e);
       sourceCallback.onSourceException(e);
@@ -244,9 +259,16 @@ public class JmsListener extends Source<Object, JmsAttributes> {
     // If no explicit content type was provided to the operation, fallback to the
     // one communicated in the message properties. Finally if no property was set,
     // use the default one provided by the config
-    return resolveOverride(resolveMessageContentType(message, config.getContentType()),
-                           contentType);
+    return resolveOverride(contentType, resolveMessageContentType(message, config.getContentType()));
   }
+
+  private String resolveEncoding(Message message) {
+    // If no explicit content type was provided to the operation, fallback to the
+    // one communicated in the message properties. Finally if no property was set,
+    // use the default one provided by the config
+    return resolveOverride(encoding, resolveMessageEncoding(message, config.getEncoding()));
+  }
+
 
   private void saveReplyToDestination(SourceCallback<Object, JmsAttributes> sourceCallback, Message message,
                                       SourceCallbackContext context) {
@@ -263,7 +285,7 @@ public class JmsListener extends Source<Object, JmsAttributes> {
   }
 
   private void saveMessageForAck(Message message, SourceCallbackContext context) {
-    if (ackMode.equals(AUTO)) {
+    if (ackMode.equals(NONE)) {
       context.addVariable(MESSAGE_TO_ACK, message);
     }
   }

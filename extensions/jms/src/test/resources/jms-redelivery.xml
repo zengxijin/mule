@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:jmsn="http://www.mulesoft.org/schema/mule/jmsn"
+      xmlns:test="http://www.mulesoft.org/schema/mule/test"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+             http://www.mulesoft.org/schema/mule/test http://www.mulesoft.org/schema/mule/test/current/mule-test.xsd
+      http://www.mulesoft.org/schema/mule/jmsn http://www.mulesoft.org/schema/mule/jmsn/current/mule-jmsn.xsd">
+
+    <jmsn:config name="config">
+        <jmsn:active-mq-connection>
+            <!--<jmsn:factory-configuration brokerUrl="tcp://192.168.99.100:32768?persistent=false&amp;useJmx=true"/>-->
+            <jmsn:factory-configuration brokerUrl="tcp://192.168.99.100:32768"/>
+        </jmsn:active-mq-connection>
+    </jmsn:config>
+
+    <!--<jmsn:config name="config">-->
+        <!--<jmsn:generic-connection>-->
+            <!--<jmsn:connection-factory>-->
+                <!--<jmsn:jndi-connection-factory connectionFactoryJndiName="ConnectionFactory"-->
+                                              <!--lookupDestination="NEVER">-->
+                    <!--<jmsn:name-resolver-builder-->
+                            <!--jndiInitialContextFactory="org.apache.activemq.jndi.ActiveMQInitialContextFactory"-->
+                            <!--jndiProviderUrl="tcp://192.168.99.100:32768">-->
+                        <!--<jmsn:provider-properties>-->
+                            <!--<jmsn:provider-property key="queue.fancyQueue" value="fancyQueue"/>-->
+                            <!--<jmsn:provider-property key="queue.fancyQueue2" value="fancyQueue2"/>-->
+                        <!--</jmsn:provider-properties>-->
+                    <!--</jmsn:name-resolver-builder>-->
+                <!--</jmsn:jndi-connection-factory>-->
+            <!--</jmsn:connection-factory>-->
+        <!--</jmsn:generic-connection>-->
+    <!--</jmsn:config>-->
+
+    <flow name="publisher">
+        <set-payload value="#[payload]" mimeType="application/json" encoding="UNICODE"/>
+        <jmsn:publish config-ref="config" destination="fancyQueue5"/>
+        <logger level="ERROR" message="#[payload]"/>
+    </flow>
+
+    <flow name="listener" initialState="stopped">
+        <jmsn:listener config-ref="config" destination="fancyQueue5" ackMode="MANUAL"/>
+        <logger level="ERROR" message="#[payload]"/>
+        <component class="org.mule.extensions.jms.test.SomeClass"/>
+        <!--<jmsn:ack ackId="#[dw:attributes.ackId.value]"/>-->
+        <!--<test:component throwException="true"/>-->
+    </flow>
+
+</mule>

@@ -19,6 +19,8 @@ import org.mule.extensions.jms.api.config.JmsProducerConfig;
 import org.mule.extensions.jms.api.destination.JmsDestination;
 import org.mule.extensions.jms.api.exception.DestinationNotFoundException;
 import org.mule.extensions.jms.internal.support.JmsSupport;
+import org.mule.runtime.api.metadata.DataType;
+import org.mule.runtime.api.metadata.TypedValue;
 import org.mule.runtime.extension.api.annotation.dsl.xml.XmlHints;
 import org.mule.runtime.extension.api.annotation.param.Content;
 import org.mule.runtime.extension.api.annotation.param.NullSafe;
@@ -27,6 +29,7 @@ import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import javax.jms.Destination;
@@ -54,7 +57,7 @@ public class MessageBuilder {
   @Parameter
   @XmlHints(allowReferences = false)
   @Content(primary = true)
-  private Object body;
+  private TypedValue<Object> body;
 
   /**
    * the JMSType header of the {@link Message}
@@ -137,7 +140,7 @@ public class MessageBuilder {
   public Message build(JmsSupport jmsSupport, Session session, JmsConfig config)
       throws JMSException {
 
-    Message message = toMessage(body, session);
+    Message message = toMessage(body.getValue(), session);
 
     setJmsCorrelationIdHeader(message);
     setJmsTypeHeader(config.getProducerConfig(), message);
@@ -147,10 +150,10 @@ public class MessageBuilder {
     setUserProperties(message);
 
     if (sendContentType) {
-      setContentTypeProperty(config, message);
+      setContentTypeProperty(message, body.getDataType());
     }
     if (sendEncoding) {
-      setEncodingProperty(config, message);
+      setEncodingProperty(message, body.getDataType());
     }
 
     return message;
@@ -169,17 +172,18 @@ public class MessageBuilder {
     }
   }
 
-  private void setEncodingProperty(JmsConfig config, Message message) {
+  private void setEncodingProperty(Message message, DataType dataType) {
     try {
-      message.setStringProperty(BODY_ENCODING_JMS_PROPERTY, resolveOverride(config.getEncoding(), encoding));
+      message.setStringProperty(BODY_ENCODING_JMS_PROPERTY,
+                                dataType.getMediaType().getCharset().map(Charset::toString).orElse("UTF-8"));
     } catch (JMSException e) {
       LOGGER.error(format("Unable to set property [%s] of type String: ", BODY_ENCODING_JMS_PROPERTY), e);
     }
   }
 
-  private void setContentTypeProperty(JmsConfig config, Message message) {
+  private void setContentTypeProperty(Message message, DataType dataType) {
     try {
-      message.setStringProperty(BODY_CONTENT_TYPE_JMS_PROPERTY, resolveOverride(config.getContentType(), contentType));
+      message.setStringProperty(BODY_CONTENT_TYPE_JMS_PROPERTY, dataType.getMediaType().toRfcString());
     } catch (JMSException e) {
       LOGGER.error(format("Unable to set property [%s] of type String: ", BODY_CONTENT_TYPE_JMS_PROPERTY), e);
     }

@@ -31,6 +31,7 @@ import org.mule.runtime.api.util.Reference;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.extension.api.annotation.param.NullSafe;
+import org.mule.runtime.extension.api.declaration.type.annotation.TypedValueTypeAnnotation;
 import org.mule.runtime.extension.api.exception.IllegalParameterModelDefinitionException;
 import org.mule.runtime.module.extension.internal.runtime.objectbuilder.DefaultObjectBuilder;
 import org.mule.runtime.module.extension.internal.runtime.objectbuilder.DefaultResolverSetBasedObjectBuilder;
@@ -101,7 +102,10 @@ public class NullSafeValueResolverWrapper<T> implements ValueResolver<T> {
 
           Optional<String> defaultValue = getDefaultValue(objectField);
           if (defaultValue.isPresent()) {
-            resolver = new TypeSafeExpressionValueResolver(defaultValue.get(), field.getType(), muleContext);
+            resolver = new TypeSafeExpressionValueResolver(defaultValue.get(), getType(objectField), muleContext);
+            if (objectField.getValue().getAnnotation(TypedValueTypeAnnotation.class).isPresent()) {
+              resolver = new ExpressionTypedValueValueResolver(defaultValue.get(), getType(objectField), muleContext);
+            }
 
           } else if (isParameterGroup(objectField)) {
             DefaultObjectBuilder groupBuilder = new DefaultObjectBuilder(getType(objectField.getValue()));

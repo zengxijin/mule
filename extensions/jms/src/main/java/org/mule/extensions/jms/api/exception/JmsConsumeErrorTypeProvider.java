@@ -8,6 +8,7 @@ package org.mule.extensions.jms.api.exception;
 
 import static org.mule.extensions.jms.api.exception.JmsErrors.ACK;
 import static org.mule.extensions.jms.api.exception.JmsErrors.CONSUMING;
+import static org.mule.extensions.jms.api.exception.JmsErrors.DESTINATION_NOT_FOUND;
 import static org.mule.extensions.jms.api.exception.JmsErrors.TIMEOUT;
 import org.mule.extensions.jms.api.config.AckMode;
 import org.mule.extensions.jms.api.config.JmsConfig;
@@ -36,6 +37,7 @@ public class JmsConsumeErrorTypeProvider implements ErrorTypeProvider {
     return ImmutableSet.<ErrorTypeDefinition>builder()
         .add(CONSUMING)
         .add(TIMEOUT)
+        .add(DESTINATION_NOT_FOUND)
         .add(ACK)
         .build();
   }

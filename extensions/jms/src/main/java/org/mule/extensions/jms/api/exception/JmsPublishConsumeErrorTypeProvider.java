@@ -8,6 +8,7 @@ package org.mule.extensions.jms.api.exception;
 
 import static org.mule.extensions.jms.api.exception.JmsErrors.ACK;
 import static org.mule.extensions.jms.api.exception.JmsErrors.CONSUMING;
+import static org.mule.extensions.jms.api.exception.JmsErrors.DESTINATION_NOT_FOUND;
 import static org.mule.extensions.jms.api.exception.JmsErrors.ILLEGAL_BODY;
 import static org.mule.extensions.jms.api.exception.JmsErrors.PUBLISHING;
 import static org.mule.extensions.jms.api.exception.JmsErrors.TIMEOUT;
@@ -41,6 +42,7 @@ public class JmsPublishConsumeErrorTypeProvider implements ErrorTypeProvider {
         .add(ILLEGAL_BODY)
         .add(CONSUMING)
         .add(TIMEOUT)
+        .add(DESTINATION_NOT_FOUND)
         .add(ACK)
         .build();
   }
