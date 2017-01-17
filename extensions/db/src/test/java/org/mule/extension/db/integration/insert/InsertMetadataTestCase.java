@@ -17,6 +17,7 @@ import org.mule.metadata.api.model.ArrayType;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.NullType;
 import org.mule.metadata.api.model.ObjectType;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
 import org.mule.runtime.api.metadata.resolving.MetadataResult;
 
@@ -31,7 +32,7 @@ public class InsertMetadataTestCase extends AbstractDbIntegrationTestCase {
 
   @Test
   public void insertOutputMetadata() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata =
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata =
         getMetadata("insertMetadata", "INSERT INTO PLANET(POSITION, NAME) VALUES (777, 'Mercury')");
 
     assertOutputPayload(metadata, typeLoader.load(StatementResult.class));
@@ -39,7 +40,7 @@ public class InsertMetadataTestCase extends AbstractDbIntegrationTestCase {
 
   @Test
   public void bulkInsertOutputMetadata() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata =
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata =
         getMetadata("bulkInsertMetadata", "INSERT INTO PLANET(POSITION, NAME) VALUES (777, :name)");
 
     assertOutputPayload(metadata, typeLoader.load(int[].class));

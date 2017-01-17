@@ -7,8 +7,6 @@
 package org.mule.runtime.module.extension.internal.metadata;
 
 import static org.mule.metadata.api.utils.MetadataTypeUtils.isVoid;
-import static org.mule.runtime.api.metadata.descriptor.builder.MetadataDescriptorBuilder.outputDescriptor;
-import static org.mule.runtime.api.metadata.descriptor.builder.MetadataDescriptorBuilder.typeDescriptor;
 import static org.mule.runtime.api.metadata.resolving.FailureCode.NO_DYNAMIC_TYPE_AVAILABLE;
 import static org.mule.runtime.api.metadata.resolving.FailureCode.UNKNOWN;
 import static org.mule.runtime.api.metadata.resolving.MetadataFailure.Builder.newFailure;
@@ -73,8 +71,10 @@ class MetadataOutputDelegate extends BaseMetadataDelegate {
     MetadataResult<TypeMetadataDescriptor> attributesDescriptor =
         toMetadataDescriptorResult(component.getOutputAttributes().getType(), false, attributes);
 
-    OutputMetadataDescriptor descriptor =
-        outputDescriptor().withReturnType(outputDescriptor.get()).withAttributesType(attributesDescriptor.get()).build();
+    OutputMetadataDescriptor descriptor = OutputMetadataDescriptor.builder()
+        .withReturnType(outputDescriptor.get())
+        .withAttributesType(attributesDescriptor.get())
+        .build();
 
     if (!output.isSuccess() || !attributes.isSuccess()) {
       List<MetadataFailure> failures = ImmutableList.<MetadataFailure>builder()
@@ -157,7 +157,7 @@ class MetadataOutputDelegate extends BaseMetadataDelegate {
                                                                             boolean isDynamic,
                                                                             MetadataResult<MetadataType> result) {
     MetadataType resultingType = result.get() == null ? type : result.get();
-    TypeMetadataDescriptor descriptor = typeDescriptor()
+    TypeMetadataDescriptor descriptor = TypeMetadataDescriptor.builder()
         .withType(resultingType)
         .dynamic(isDynamic)
         .build();

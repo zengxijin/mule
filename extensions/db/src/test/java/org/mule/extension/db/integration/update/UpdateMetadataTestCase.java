@@ -17,6 +17,7 @@ import org.mule.metadata.api.model.ArrayType;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.NullType;
 import org.mule.metadata.api.model.ObjectType;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
 import org.mule.runtime.api.metadata.resolving.MetadataResult;
 
@@ -35,7 +36,7 @@ public class UpdateMetadataTestCase extends AbstractDbIntegrationTestCase {
 
   @Test
   public void updateOutputMetadata() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata =
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata =
         getMetadata("updateMetadata", "update PLANET set NAME='Mercury' where POSITION=4");
 
     assertOutputPayload(metadata, typeLoader.load(StatementResult.class));
@@ -43,7 +44,7 @@ public class UpdateMetadataTestCase extends AbstractDbIntegrationTestCase {
 
   @Test
   public void bulkUpdateOutputMetadata() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata =
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata =
         getMetadata("bulkUpdateMetadata", "update PLANET set NAME='Mercury' where NAME= :name");
 
     assertOutputPayload(metadata, typeLoader.load(int[].class));

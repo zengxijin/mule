@@ -11,11 +11,9 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.runtime.core.util.ExceptionUtils.extractConnectionException;
-import static org.mule.runtime.module.extension.internal.metadata.MetadataMediatorFactory.getSourceMetadataMediator;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getFieldValue;
 import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.getInitialiserEvent;
 import static org.slf4j.LoggerFactory.getLogger;
-
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.dsl.config.ComponentIdentifier;
 import org.mule.runtime.api.exception.MuleException;
@@ -60,7 +58,7 @@ import org.slf4j.Logger;
  *
  * @since 4.0
  */
-public class ExtensionMessageSource extends ExtensionComponent implements MessageSource, ExceptionCallback {
+public class ExtensionMessageSource extends ExtensionComponent<SourceModel> implements MessageSource, ExceptionCallback {
 
   private static final Logger LOGGER = getLogger(ExtensionMessageSource.class);
 
@@ -83,7 +81,7 @@ public class ExtensionMessageSource extends ExtensionComponent implements Messag
   public ExtensionMessageSource(ExtensionModel extensionModel, SourceModel sourceModel, SourceAdapterFactory sourceAdapterFactory,
                                 ConfigurationProvider configurationProvider, RetryPolicyTemplate retryPolicyTemplate,
                                 ExtensionManagerAdapter managerAdapter) {
-    super(extensionModel, sourceModel, configurationProvider, managerAdapter, getSourceMetadataMediator(sourceModel));
+    super(extensionModel, sourceModel, configurationProvider, managerAdapter);
     this.sourceModel = sourceModel;
     this.sourceAdapterFactory = sourceAdapterFactory;
     this.retryPolicyTemplate = retryPolicyTemplate;

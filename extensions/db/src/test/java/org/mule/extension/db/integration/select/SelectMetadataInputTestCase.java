@@ -21,6 +21,7 @@ import org.mule.extension.db.integration.AbstractDbIntegrationTestCase;
 import org.mule.metadata.api.model.NullType;
 import org.mule.metadata.api.model.ObjectFieldType;
 import org.mule.metadata.api.model.ObjectType;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
 import org.mule.runtime.api.metadata.resolving.MetadataResult;
 
@@ -37,7 +38,7 @@ public class SelectMetadataInputTestCase extends AbstractDbIntegrationTestCase {
 
   @Test
   public void returnsNullSelectMetadataUnParameterizedQuery() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata = getMetadata("selectMetadata", "select * from PLANET");
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata = getMetadata("selectMetadata", "select * from PLANET");
 
     assertThat(metadata.isSuccess(), is(true));
     assertThat(metadata.get().getModel().getAllParameterModels().stream()
@@ -49,7 +50,7 @@ public class SelectMetadataInputTestCase extends AbstractDbIntegrationTestCase {
   @Test
   public void returnsAnySelectInputMetadataFromNotSupportedParameterizedQuery() throws Exception {
 
-    MetadataResult<ComponentMetadataDescriptor> metadata =
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata =
         getMetadata("selectMetadata",
                     "select * from PLANET where id = #[payload.id] and name = #[message.outboundProperties.updateCount]");
 
@@ -62,8 +63,8 @@ public class SelectMetadataInputTestCase extends AbstractDbIntegrationTestCase {
 
   @Test
   public void returnsSelectInputMetadataFromBeanParameterizedQuery() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata = getMetadata("selectMetadata",
-                                                                       "select * from PLANET where id = :id and name = :name");
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata = getMetadata("selectMetadata",
+                                                                                       "select * from PLANET where id = :id and name = :name");
 
     assertThat(metadata.isSuccess(), is(true));
     ObjectType type = (ObjectType) metadata.get().getModel().getAllParameterModels().stream()

@@ -21,6 +21,8 @@ import org.mule.metadata.api.model.ObjectType;
 import org.mule.metadata.api.model.UnionType;
 import org.mule.runtime.api.message.MultiPartPayload;
 import org.mule.runtime.api.meta.model.OutputModel;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
+import org.mule.runtime.api.meta.model.source.SourceModel;
 import org.mule.runtime.api.metadata.ConfigurationId;
 import org.mule.runtime.api.metadata.MetadataKey;
 import org.mule.runtime.api.metadata.MetadataKeysContainer;
@@ -95,7 +97,7 @@ public class HttpMetadataResolverTestCase extends AbstractHttpTestCase {
   @Description("Resolves the metadata for a HTTP Listener")
   @Test
   public void getListenerMetadata() {
-    MetadataResult<ComponentMetadataDescriptor> server = service.getMetadata(new SourceId("server"));
+    MetadataResult<ComponentMetadataDescriptor<SourceModel>> server = service.getSourceMetadata(new SourceId("server"));
     assertThat(server.isSuccess(), is(true));
     assertThat(server.get().getModel().getOutput().getType(), is(instanceOf(AnyType.class)));
   }
@@ -123,7 +125,8 @@ public class HttpMetadataResolverTestCase extends AbstractHttpTestCase {
   }
 
   private OutputModel getMetadata(String flowName) {
-    MetadataResult<ComponentMetadataDescriptor> result = service.getMetadata(new ProcessorId(flowName, "0"));
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> result =
+        service.getOperationMetadata(new ProcessorId(flowName, "0"));
     assertThat(result.isSuccess(), is(true));
     return result.get().getModel().getOutput();
   }

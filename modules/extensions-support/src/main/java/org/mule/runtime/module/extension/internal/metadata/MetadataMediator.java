@@ -8,7 +8,6 @@ package org.mule.runtime.module.extension.internal.metadata;
 
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
-import static org.mule.runtime.api.metadata.descriptor.builder.MetadataDescriptorBuilder.attributesBuilder;
 import static org.mule.runtime.api.metadata.resolving.MetadataFailure.Builder.newFailure;
 import static org.mule.runtime.api.metadata.resolving.MetadataResult.failure;
 import static org.mule.runtime.api.metadata.resolving.MetadataResult.success;
@@ -24,7 +23,6 @@ import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
 import org.mule.runtime.api.metadata.descriptor.InputMetadataDescriptor;
 import org.mule.runtime.api.metadata.descriptor.OutputMetadataDescriptor;
 import org.mule.runtime.api.metadata.descriptor.TypeMetadataDescriptor;
-import org.mule.runtime.api.metadata.descriptor.builder.MetadataAttributesBuilder;
 import org.mule.runtime.api.metadata.resolving.InputTypeResolver;
 import org.mule.runtime.api.metadata.resolving.MetadataFailure;
 import org.mule.runtime.api.metadata.resolving.MetadataResult;
@@ -52,10 +50,9 @@ import java.util.Optional;
  *
  * @since 4.0
  */
-public class MetadataMediator<T extends ComponentModel> {
+public final class MetadataMediator<T extends ComponentModel<T>> {
 
   protected final T component;
-  protected final TypeConverterDelegate<T> componentModelTypeConverter;
   private final List<ParameterModel> metadataKeyParts;
   private final MetadataKeysDelegate keysDelegate;
   private final MetadataOutputDelegate outputDelegate;
@@ -63,9 +60,8 @@ public class MetadataMediator<T extends ComponentModel> {
   private final MetadataKeyIdObjectResolver keyIdObjectResolver;
   private String keyContainerName = null;
 
-  protected MetadataMediator(T componentModel, TypeConverterDelegate<T> componentModelTypeConverter) {
+  public MetadataMediator(T componentModel) {
     this.component = componentModel;
-    this.componentModelTypeConverter = componentModelTypeConverter;
     this.metadataKeyParts = getMetadataKeyParts(componentModel);
     this.keysDelegate = new MetadataKeysDelegate(componentModel, metadataKeyParts);
     this.keyIdObjectResolver = new MetadataKeyIdObjectResolver(component);
@@ -104,7 +100,7 @@ public class MetadataMediator<T extends ComponentModel> {
   public MetadataResult<ComponentMetadataDescriptor<T>> getMetadata(MetadataContext context, MetadataKey key) {
     try {
       Object resolvedKey = keyIdObjectResolver.resolve(key);
-      return getMetadata(context, p -> resolvedKey, attributesBuilder().withKey(key));
+      return getMetadata(context, p -> resolvedKey, MetadataAttributes.builder().withKey(key));
     } catch (MetadataResolvingException e) {
       return failure(newFailure(e).onComponent());
     }
@@ -112,7 +108,7 @@ public class MetadataMediator<T extends ComponentModel> {
 
   public MetadataResult<ComponentMetadataDescriptor<T>> getMetadata(MetadataContext context,
                                                                     ParameterValueResolver metadataKeyResolver) {
-    return getMetadata(context, metadataKeyResolver, attributesBuilder());
+    return getMetadata(context, metadataKeyResolver, MetadataAttributes.builder());
   }
 
   /**
@@ -127,7 +123,7 @@ public class MetadataMediator<T extends ComponentModel> {
    */
   private MetadataResult<ComponentMetadataDescriptor<T>> getMetadata(MetadataContext context,
                                                                      ParameterValueResolver metadataKeyResolver,
-                                                                     MetadataAttributesBuilder attributesBuilder) {
+                                                                     MetadataAttributes.MetadataAttributesBuilder attributesBuilder) {
     Object keyValue;
     MetadataResult keyValueResult = getMetadataKeyObjectValue(metadataKeyResolver);
     if (!keyValueResult.isSuccess()) {
@@ -141,10 +137,8 @@ public class MetadataMediator<T extends ComponentModel> {
 
     if (output.isSuccess() && input.isSuccess()) {
       MetadataAttributes metadataAttributes = getMetadataAttributes(attributesBuilder, outputDelegate, input.get());
-      ComponentMetadataDescriptor componentDescriptor =
-          componentModelTypeConverter.getMetadataDescriptor(component, input.get(), output.get(), metadataAttributes);
-
-      return success(componentDescriptor);
+      T model = component.getTypedModel(input.get(), output.get());
+      return success(ComponentMetadataDescriptor.builder(model).withAttributes(metadataAttributes).build());
     }
 
     List<MetadataFailure> failures = ImmutableList.<MetadataFailure>builder()
@@ -152,10 +146,10 @@ public class MetadataMediator<T extends ComponentModel> {
         .addAll(input.getFailures())
         .build();
 
-    return failure(null, failures);
+    return failure(failures);
   }
 
-  private MetadataAttributes getMetadataAttributes(MetadataAttributesBuilder attributesBuilder,
+  private MetadataAttributes getMetadataAttributes(MetadataAttributes.MetadataAttributesBuilder attributesBuilder,
                                                    MetadataOutputDelegate outputDelegate,
                                                    InputMetadataDescriptor input) {
 

@@ -17,6 +17,7 @@ import org.mule.extension.db.integration.AbstractDbIntegrationTestCase;
 import org.mule.metadata.api.ClassTypeLoader;
 import org.mule.metadata.api.model.ArrayType;
 import org.mule.metadata.api.model.ObjectType;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
 import org.mule.runtime.api.metadata.resolving.FailureCode;
 import org.mule.runtime.api.metadata.resolving.MetadataFailure;
@@ -75,7 +76,8 @@ public class SelectMetadataOutputTestCase extends AbstractDbIntegrationTestCase 
 
   @Test
   public void selectInvalidJoin() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata = getMetadata("selectMetadata", "select NAME, NAME from PLANET");
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata =
+        getMetadata("selectMetadata", "select NAME, NAME from PLANET");
     assertThat(metadata.isSuccess(), is(false));
     assertThat(metadata.getFailures(), hasSize(1));
     MetadataFailure failure = metadata.getFailures().get(0);
@@ -84,7 +86,7 @@ public class SelectMetadataOutputTestCase extends AbstractDbIntegrationTestCase 
   }
 
   private ObjectType getSelectOutputMetadata(String query) throws RegistrationException {
-    MetadataResult<ComponentMetadataDescriptor> metadata = getMetadata("selectMetadata", query);
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata = getMetadata("selectMetadata", query);
     assertThat(metadata.isSuccess(), is(true));
     ArrayType output = (ArrayType) metadata.get().getModel().getOutput().getType();
     return (ObjectType) output.getType();

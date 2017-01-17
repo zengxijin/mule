@@ -7,6 +7,7 @@
 package org.mule.runtime.module.extension.internal.runtime.operation;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -52,6 +53,7 @@ import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Attributes;
 import org.mule.runtime.api.meta.model.ComponentModel;
 import org.mule.runtime.api.meta.model.ExecutionType;
+import org.mule.runtime.api.meta.model.OutputModel;
 import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.metadata.MediaType;
 import org.mule.runtime.api.metadata.MetadataKey;
@@ -317,8 +319,10 @@ public class OperationMessageProcessorTestCase extends AbstractOperationMessageP
 
   @Test
   public void getExplicitOperationDynamicMetadata() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata = messageProcessor.getMetadata(newKey("person", "Person").build());
-
+    mockMetadataResolution();
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata =
+        messageProcessor.getMetadata(newKey("person", "Person").build());
+    verify(operationModel).getTypedModel(any(), any());
     assertThat(metadata.isSuccess(), is(true));
 
     MetadataType payloadMetadata = metadata.get().getModel().getOutput().getType();
@@ -336,18 +340,34 @@ public class OperationMessageProcessorTestCase extends AbstractOperationMessageP
         .findFirst().get().getType(), is(stringType));
   }
 
+  private void mockMetadataResolution() {
+    OperationModel typedModel = mock(OperationModel.class);
+    OutputModel resolvedOutputModel = mock(OutputModel.class);
+    when(resolvedOutputModel.getType()).thenReturn(TYPE_BUILDER.booleanType().build());
+    when(resolvedOutputModel.hasDynamicType()).thenReturn(true);
+    when(operationModel.getTypedModel(any(), any())).thenReturn(typedModel);
+    when(typedModel.getOutput()).thenReturn(resolvedOutputModel);
+    when(typedModel.getOutputAttributes()).thenReturn(resolvedOutputModel);
+    when(contentMock.getType()).thenReturn(TYPE_BUILDER.stringType().build());
+    when(typedModel.getAllParameterModels()).thenReturn(asList(keyParamMock, contentMock));
+  }
+
   @Test
   public void getDSLOperationDynamicMetadata() throws Exception {
     final ObjectType objectType = BaseTypeBuilder
         .create(JAVA).objectType()
         .with(new DescriptionAnnotation("Some Description"))
         .build();
+    mockMetadataResolution();
+    when(operationModel.getTypedModel(any(), any()).getOutput().getType()).thenReturn(objectType);
+
     setUpValueResolvers();
     final OutputTypeResolver outputTypeResolver = mock(OutputTypeResolver.class);
     when(outputTypeResolver.getOutputType(any(), eq("person"))).thenReturn(objectType);
     when(metadataResolverFactory.getOutputResolver()).thenReturn(outputTypeResolver);
+    //verify(operationModel).getTypedModel(any(), any());
 
-    final MetadataResult<ComponentMetadataDescriptor> metadata = messageProcessor.getMetadata();
+    final MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata = messageProcessor.getMetadata();
     assertThat(metadata.isSuccess(), is(true));
 
     MetadataType outputMetadata = metadata.get().getModel().getOutput().getType();

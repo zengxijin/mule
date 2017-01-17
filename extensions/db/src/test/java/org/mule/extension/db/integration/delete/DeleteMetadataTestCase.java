@@ -16,6 +16,7 @@ import org.mule.metadata.api.model.ArrayType;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.NullType;
 import org.mule.metadata.api.model.ObjectType;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
 import org.mule.runtime.api.metadata.resolving.MetadataResult;
 
@@ -30,7 +31,7 @@ public class DeleteMetadataTestCase extends AbstractDbIntegrationTestCase {
 
   @Test
   public void deleteOutputMetadata() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata =
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata =
         getMetadata("deleteMetadata", "DELETE FROM PLANET WHERE name = 'Mars'");
 
     assertOutputPayload(metadata, typeLoader.load(int.class));
@@ -38,7 +39,7 @@ public class DeleteMetadataTestCase extends AbstractDbIntegrationTestCase {
 
   @Test
   public void bulkDeleteOutputMetadata() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata =
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata =
         getMetadata("bulkDeleteMetadata", "DELETE FROM PLANET WHERE name = 'Mars'");
 
     assertOutputPayload(metadata, typeLoader.load(int[].class));

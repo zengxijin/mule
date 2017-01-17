@@ -47,6 +47,7 @@ import org.mule.metadata.api.model.ObjectFieldType;
 import org.mule.metadata.api.model.ObjectType;
 import org.mule.metadata.api.model.StringType;
 import org.mule.runtime.api.meta.model.ComponentModel;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.metadata.MetadataCache;
 import org.mule.runtime.api.metadata.MetadataKey;
@@ -129,7 +130,8 @@ public class MetadataOperationTestCase extends MetadataExtensionFunctionalTestCa
   public void injectComposedMetadataKeyIdInstanceInMetadataResolver() throws Exception {
     componentId = new ProcessorId(SIMPLE_MULTILEVEL_KEY_RESOLVER, FIRST_PROCESSOR_INDEX);
     MetadataKey key = newKey(AMERICA, CONTINENT).withChild(newKey(USA, COUNTRY).withChild(newKey(SAN_FRANCISCO, CITY))).build();
-    final MetadataResult<ComponentMetadataDescriptor> metadataResult = metadataService.getMetadata(componentId, key);
+    final MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadataResult =
+        metadataService.getOperationMetadata(componentId, key);
     assertSuccessResult(metadataResult);
   }
 
@@ -411,7 +413,8 @@ public class MetadataOperationTestCase extends MetadataExtensionFunctionalTestCa
   @Test
   public void booleanMetadataKey() throws IOException {
     componentId = new ProcessorId(BOOLEAN_METADATA_KEY, FIRST_PROCESSOR_INDEX);
-    MetadataResult<ComponentMetadataDescriptor> result = metadataService.getMetadata(componentId, newKey("true").build());
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> result =
+        metadataService.getOperationMetadata(componentId, newKey("true").build());
     assertSuccessResult(result);
     assertExpectedType(getParameter(result.get().getModel(), "content"), TYPE_LOADER.load(SwordFish.class), true);
   }
@@ -444,7 +447,7 @@ public class MetadataOperationTestCase extends MetadataExtensionFunctionalTestCa
   @Test
   public void metadataKeyDefaultValue() throws Exception {
     componentId = new ProcessorId(METADATA_KEY_DEFAULT_VALUE, FIRST_PROCESSOR_INDEX);
-    MetadataResult<ComponentMetadataDescriptor> result = metadataService.getMetadata(componentId);
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> result = metadataService.getOperationMetadata(componentId);
     assertSuccessResult(result);
     MetadataType type = result.get().getModel().getOutput().getType();
     assertThat(type, is(instanceOf(ObjectType.class)));
@@ -456,7 +459,8 @@ public class MetadataOperationTestCase extends MetadataExtensionFunctionalTestCa
   @Test
   public void defaultValueMultilevelMetadataKey() throws Exception {
     componentId = new ProcessorId(MULTILEVEL_METADATA_KEY_DEFAULT_VALUE, FIRST_PROCESSOR_INDEX);
-    final MetadataResult<ComponentMetadataDescriptor> metadataDescriptor = metadataService.getMetadata(componentId);
+    final MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadataDescriptor =
+        metadataService.getOperationMetadata(componentId);
     MetadataType type = getParameter(metadataDescriptor.get().getModel(), "content").getType();
     assertThat(type, is(instanceOf(ObjectType.class)));
     assertThat(((ObjectType) type).getFields().size(), is(3));
@@ -470,7 +474,7 @@ public class MetadataOperationTestCase extends MetadataExtensionFunctionalTestCa
   @Test
   public void defaultValueMetadataKey() throws Exception {
     componentId = new ProcessorId(METADATA_KEY_DEFAULT_VALUE, FIRST_PROCESSOR_INDEX);
-    final MetadataResult<ComponentMetadataDescriptor> result = metadataService.getMetadata(componentId);
+    final MetadataResult<ComponentMetadataDescriptor<OperationModel>> result = metadataService.getOperationMetadata(componentId);
     assertSuccessResult(result);
     ComponentMetadataDescriptor descriptor = result.get();
     MetadataType type = descriptor.getModel().getOutput().getType();
@@ -482,7 +486,7 @@ public class MetadataOperationTestCase extends MetadataExtensionFunctionalTestCa
   @Test
   public void operationWhichReturnsListOfMessages() throws Exception {
     componentId = new ProcessorId("listOfMessages", FIRST_PROCESSOR_INDEX);
-    final MetadataResult<ComponentMetadataDescriptor> result = metadataService.getMetadata(componentId);
+    final MetadataResult<ComponentMetadataDescriptor<OperationModel>> result = metadataService.getOperationMetadata(componentId);
     assertSuccessResult(result);
     ComponentMetadataDescriptor descriptor = result.get();
     MetadataType param = descriptor.getModel().getOutput().getType();
@@ -494,7 +498,7 @@ public class MetadataOperationTestCase extends MetadataExtensionFunctionalTestCa
   @Test
   public void operationWhichReturnsDynamicListOfMessages() throws Exception {
     componentId = new ProcessorId("dynamicListOfMessages", FIRST_PROCESSOR_INDEX);
-    final MetadataResult<ComponentMetadataDescriptor> result = metadataService.getMetadata(componentId);
+    final MetadataResult<ComponentMetadataDescriptor<OperationModel>> result = metadataService.getOperationMetadata(componentId);
     assertSuccessResult(result);
     ComponentMetadataDescriptor descriptor = result.get();
     MetadataType param = descriptor.getModel().getOutput().getType();
@@ -532,13 +536,8 @@ public class MetadataOperationTestCase extends MetadataExtensionFunctionalTestCa
 
 
   private final ParameterModel getParameter(ComponentModel model, String parameterName) {
-    Optional<ParameterModel> parameterModel = model.getAllParameterModels().stream()
-        .filter(p -> p.getName().equals(parameterName)).findFirst();
-
-    if (parameterModel.isPresent()) {
-      return parameterModel.get();
-    }
-
-    throw new IllegalArgumentException("Parameter not found");
+    return model.getAllParameterModels().stream()
+        .filter(p -> p.getName().equals(parameterName)).findFirst()
+        .orElseThrow(() -> new IllegalArgumentException("Parameter not found"));
   }
 }

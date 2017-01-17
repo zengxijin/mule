@@ -6,6 +6,7 @@
  */
 package org.mule.runtime.core.internal.metadata;
 
+import static java.util.Collections.unmodifiableCollection;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import org.mule.runtime.api.metadata.resolving.AttributesTypeResolver;
 import org.mule.runtime.api.metadata.resolving.InputTypeResolver;
@@ -17,7 +18,6 @@ import org.mule.runtime.extension.api.metadata.NullMetadataResolver;
 import org.mule.runtime.extension.api.metadata.NullQueryMetadataResolver;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -78,7 +78,7 @@ public final class DefaultMetadataResolverFactory implements MetadataResolverFac
    * {@inheritDoc}
    */
   public Collection<InputTypeResolver> getInputResolvers() {
-    return Collections.unmodifiableCollection(inputResolvers.values());
+    return unmodifiableCollection(inputResolvers.values());
   }
 
   /**

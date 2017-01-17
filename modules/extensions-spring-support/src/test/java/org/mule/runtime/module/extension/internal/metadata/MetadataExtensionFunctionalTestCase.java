@@ -27,6 +27,7 @@ import org.mule.metadata.api.model.MetadataType;
 import org.mule.runtime.api.meta.Typed;
 import org.mule.runtime.api.meta.model.ComponentModel;
 import org.mule.runtime.api.meta.model.OutputModel;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.metadata.ComponentId;
 import org.mule.runtime.api.metadata.MetadataKey;
 import org.mule.runtime.api.metadata.MetadataKeysContainer;
@@ -114,10 +115,10 @@ public abstract class MetadataExtensionFunctionalTestCase extends ExtensionFunct
   protected final static NullMetadataKey NULL_METADATA_KEY = new NullMetadataKey();
   protected final static ClassTypeLoader TYPE_LOADER = ExtensionsTestUtils.TYPE_LOADER;
 
-  private static final MetadataComponentDescriptorProvider explicitMetadataResolver =
-      (metadataService, componentId, key) -> metadataService.getMetadata(componentId, key);
-  private static final MetadataComponentDescriptorProvider dslMetadataResolver =
-      (metadataService, componentId, key) -> metadataService.getMetadata(componentId);
+  private static final MetadataComponentDescriptorProvider<OperationModel> explicitMetadataResolver =
+      MetadataService::getOperationMetadata;
+  private static final MetadataComponentDescriptorProvider<OperationModel> dslMetadataResolver =
+      (metadataService, componentId, key) -> metadataService.getOperationMetadata(componentId);
 
   protected MetadataType personType;
   protected ComponentId componentId;
@@ -156,7 +157,7 @@ public abstract class MetadataExtensionFunctionalTestCase extends ExtensionFunct
     EXPLICIT_RESOLUTION, DSL_RESOLUTION
   }
 
-  MetadataResult<ComponentMetadataDescriptor> getComponentDynamicMetadata(MetadataKey key) {
+  <T extends ComponentModel<T>> MetadataResult<ComponentMetadataDescriptor<T>> getComponentDynamicMetadata(MetadataKey key) {
     checkArgument(componentId != null, "Unable to resolve Metadata. The Component ID has not been configured.");
     return provider.resolveDynamicMetadata(metadataService, componentId, key);
   }
@@ -165,8 +166,8 @@ public abstract class MetadataExtensionFunctionalTestCase extends ExtensionFunct
     return getSuccessComponentDynamicMetadata(PERSON_METADATA_KEY);
   }
 
-  ComponentMetadataDescriptor getSuccessComponentDynamicMetadata(MetadataKey key) {
-    MetadataResult<ComponentMetadataDescriptor> componentMetadata = getComponentDynamicMetadata(key);
+  <T extends ComponentModel<T>> ComponentMetadataDescriptor<T> getSuccessComponentDynamicMetadata(MetadataKey key) {
+    MetadataResult<ComponentMetadataDescriptor<T>> componentMetadata = getComponentDynamicMetadata(key);
     String msg = componentMetadata.getFailures().stream().map(f -> "Failure: " + f.getMessage()).collect(joining(", "));
     assertThat(msg, componentMetadata.isSuccess(), is(true));
     return componentMetadata.get();
@@ -246,9 +247,9 @@ public abstract class MetadataExtensionFunctionalTestCase extends ExtensionFunct
     assertThat("Expecting failure but a success result found", result.isSuccess(), is(false));
   }
 
-  private interface MetadataComponentDescriptorProvider {
+  interface MetadataComponentDescriptorProvider<T extends ComponentModel<T>> {
 
-    MetadataResult<ComponentMetadataDescriptor> resolveDynamicMetadata(MetadataService metadataService,
-                                                                       ComponentId componentId, MetadataKey key);
+    MetadataResult<ComponentMetadataDescriptor<T>> resolveDynamicMetadata(MetadataService metadataService,
+                                                                          ComponentId componentId, MetadataKey key);
   }
 }

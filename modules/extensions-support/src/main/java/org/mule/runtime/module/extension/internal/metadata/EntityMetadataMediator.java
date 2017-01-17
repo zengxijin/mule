@@ -6,7 +6,6 @@
  */
 package org.mule.runtime.module.extension.internal.metadata;
 
-import static org.mule.runtime.api.metadata.descriptor.builder.MetadataDescriptorBuilder.typeDescriptor;
 import static org.mule.runtime.api.metadata.resolving.FailureCode.INVALID_METADATA_KEY;
 import static org.mule.runtime.api.metadata.resolving.MetadataFailure.Builder.newFailure;
 import static org.mule.runtime.api.metadata.resolving.MetadataResult.failure;
@@ -68,7 +67,7 @@ public class EntityMetadataMediator {
   public MetadataResult<TypeMetadataDescriptor> getEntityMetadata(MetadataContext context, MetadataKey entityKey) {
     try {
       MetadataType entityMetadata = resolverFactory.getQueryEntityResolver().getEntityMetadata(context, entityKey.getId());
-      return success(typeDescriptor().withType(entityMetadata).build());
+      return success(TypeMetadataDescriptor.builder().withType(entityMetadata).build());
     } catch (Exception e) {
       return failure(newFailure(e).onEntity());
     }

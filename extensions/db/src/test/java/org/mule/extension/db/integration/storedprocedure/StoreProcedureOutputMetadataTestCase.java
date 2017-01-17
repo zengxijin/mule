@@ -11,6 +11,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import org.mule.extension.db.integration.AbstractDbIntegrationTestCase;
 import org.mule.metadata.api.model.MetadataType;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
 import org.mule.runtime.api.metadata.resolving.MetadataResult;
 
@@ -25,7 +26,8 @@ public class StoreProcedureOutputMetadataTestCase extends AbstractDbIntegrationT
 
   @Test
   public void updateMetadata() throws Exception {
-    MetadataResult<ComponentMetadataDescriptor> metadata = getMetadata("storedMetadata", "{ call getTestRecords() }");
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> metadata =
+        getMetadata("storedMetadata", "{ call getTestRecords() }");
     assertThat(metadata.isSuccess(), is(true));
     MetadataType output = metadata.get().getModel().getOutput().getType();
     assertThat(output, is(typeBuilder.objectType().build()));

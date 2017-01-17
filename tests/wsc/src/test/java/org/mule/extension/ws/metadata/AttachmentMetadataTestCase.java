@@ -18,6 +18,7 @@ import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.NullType;
 import org.mule.metadata.api.model.ObjectFieldType;
 import org.mule.metadata.api.model.ObjectType;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
 import org.mule.runtime.api.metadata.resolving.MetadataResult;
 
@@ -35,7 +36,7 @@ public class AttachmentMetadataTestCase extends AbstractMetadataTestCase {
   @Test
   @Description("Checks the Input Metadata of an operation that requires input attachments")
   public void getUploadAttachmentMetadata() {
-    MetadataResult<ComponentMetadataDescriptor> result = getMetadata(UPLOAD_ATTACHMENT, UPLOAD_ATTACHMENT);
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> result = getMetadata(UPLOAD_ATTACHMENT, UPLOAD_ATTACHMENT);
     MetadataType message = result.get().getModel().getAllParameterModels().stream()
         .filter(p -> p.getName().equals(MESSAGE_PARAM))
         .findFirst().get().getType();
@@ -50,7 +51,7 @@ public class AttachmentMetadataTestCase extends AbstractMetadataTestCase {
   @Test
   @Description("Checks the Input Metadata of an operation without attachments")
   public void getEchoMetadata() {
-    MetadataResult<ComponentMetadataDescriptor> result = getMetadata(ECHO_FLOW, ECHO);
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> result = getMetadata(ECHO_FLOW, ECHO);
     MetadataType message = result.get().getModel().getAllParameterModels().stream()
         .filter(p -> p.getName().equals(MESSAGE_PARAM))
         .findFirst().get().getType();

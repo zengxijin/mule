@@ -23,6 +23,7 @@ import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.NumberType;
 import org.mule.metadata.api.model.ObjectFieldType;
 import org.mule.metadata.api.model.ObjectType;
+import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.metadata.MetadataKey;
 import org.mule.runtime.api.metadata.MetadataKeysContainer;
 import org.mule.runtime.api.metadata.ProcessorId;
@@ -67,7 +68,7 @@ public class QueryMetadataTestCase extends MetadataExtensionFunctionalTestCase {
   public void getDsqlQueryAutomaticGeneratedOutputMetadata() throws Exception {
     componentId = QUERY_ID;
     MetadataKey dsqlKey = newKey(DSQL_QUERY).build();
-    MetadataResult<ComponentMetadataDescriptor> entityMetadata = getComponentDynamicMetadata(dsqlKey);
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> entityMetadata = getComponentDynamicMetadata(dsqlKey);
     assertThat(entityMetadata.isSuccess(), is(true));
 
     MetadataType generatedType = entityMetadata.get().getModel().getOutput().getType();
@@ -84,7 +85,7 @@ public class QueryMetadataTestCase extends MetadataExtensionFunctionalTestCase {
   public void getNativeQueryOutputMetadata() throws Exception {
     componentId = new ProcessorId(NATIVE_QUERY_FLOW, FIRST_PROCESSOR_INDEX);
     MetadataKey nativeKey = newKey(NATIVE_QUERY).build();
-    MetadataResult<ComponentMetadataDescriptor> entityMetadata = getComponentDynamicMetadata(nativeKey);
+    MetadataResult<ComponentMetadataDescriptor<OperationModel>> entityMetadata = getComponentDynamicMetadata(nativeKey);
 
     assertThat(entityMetadata.isSuccess(), is(true));
     assertThat(entityMetadata.get().getModel().getOutput().getType(), is(CIRCLE_TYPE));

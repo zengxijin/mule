@@ -18,7 +18,6 @@ import static org.mule.runtime.core.api.rx.Exceptions.rxExceptionToMuleException
 import static org.mule.runtime.core.el.mvel.MessageVariableResolverFactory.FLOW_VARS;
 import static org.mule.runtime.core.util.ClassUtils.withContextClassLoader;
 import static org.mule.runtime.core.util.StringUtils.isBlank;
-import static org.mule.runtime.module.extension.internal.metadata.MetadataMediatorFactory.getOperationMetadataMediator;
 import static org.mule.runtime.module.extension.internal.runtime.ExecutionTypeMapper.asProcessingType;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.isVoid;
 import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.getClassLoader;
@@ -92,7 +91,8 @@ import reactor.core.publisher.Mono;
  *
  * @since 3.7.0
  */
-public class OperationMessageProcessor extends ExtensionComponent implements Processor, EntityMetadataProvider, Lifecycle {
+public class OperationMessageProcessor extends ExtensionComponent<OperationModel>
+    implements Processor, EntityMetadataProvider, Lifecycle {
 
   private static final Logger LOGGER = getLogger(OperationMessageProcessor.class);
   static final String INVALID_TARGET_MESSAGE =
@@ -117,7 +117,7 @@ public class OperationMessageProcessor extends ExtensionComponent implements Pro
                                    ResolverSet resolverSet,
                                    ExtensionManagerAdapter extensionManager,
                                    PolicyManager policyManager) {
-    super(extensionModel, operationModel, configurationProvider, extensionManager, getOperationMetadataMediator(operationModel));
+    super(extensionModel, operationModel, configurationProvider, extensionManager);
     this.extensionModel = extensionModel;
     this.operationModel = operationModel;
     this.resolverSet = resolverSet;
@@ -253,9 +253,8 @@ public class OperationMessageProcessor extends ExtensionComponent implements Pro
   @Override
   public MetadataResult<TypeMetadataDescriptor> getEntityMetadata(MetadataKey key) throws MetadataResolvingException {
     try {
-      return runWithMetadataContext(context -> withContextClassLoader(classLoader,
-                                                                      () -> entityMetadataMediator
-                                                                          .getEntityMetadata(context, key)));
+      return runWithMetadataContext(context -> withContextClassLoader(classLoader, () -> entityMetadataMediator
+          .getEntityMetadata(context, key)));
     } catch (ConnectionException e) {
       return failure(newFailure(e).onKeys());
     }
