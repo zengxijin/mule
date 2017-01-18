@@ -8,19 +8,17 @@ package org.mule.runtime.config.spring.dsl.model;
 
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.ObjectType;
-import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
-import org.mule.runtime.dsl.api.component.config.ComponentIdentifier;
-import org.mule.runtime.api.app.declaration.ComponentElementDeclaration;
-import org.mule.runtime.api.app.declaration.ConfigurationElementDeclaration;
+import org.mule.runtime.api.app.declaration.ElementDeclaration;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.config.ConfigurationModel;
 import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.meta.model.source.SourceModel;
 import org.mule.runtime.config.spring.dsl.model.internal.DefaultDslElementModelFactory;
+import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
+import org.mule.runtime.dsl.api.component.config.ComponentIdentifier;
 import org.mule.runtime.extension.api.dsl.DslResolvingContext;
 
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Provides the {@link DslElementModel} of any {@link ComponentConfiguration} within
@@ -37,9 +35,9 @@ public interface DslElementModelFactory {
    * <p>
    * //TODO
    *
-   * @param extensions the {@link Set} of {@link ExtensionModel} to be used as context when
-   *                   performing a {@link ComponentIdentifier#getNamespace namespace}
-   *                   based lookup for a given {@link ExtensionModel}.
+   * @param context the {@link DslResolvingContext} to be used when performing a
+   *                {@link ComponentIdentifier#getNamespace namespace} or {@link ElementDeclaration#getName}
+   *                based lookup for a given {@link ExtensionModel}.
    * @return a default implementation of the {@link DslElementModelFactory}
    */
   static DslElementModelFactory getDefault(DslResolvingContext context) {
@@ -47,31 +45,24 @@ public interface DslElementModelFactory {
   }
 
   /**
-   * Resolves the {@link DslElementModel} for the given {@link ComponentConfiguration applicationElement},
-   * providing an element with all the required information for representing this {@code applicationElement}
+   * Resolves the {@link DslElementModel} for the given {@link ElementDeclaration},
+   * providing an element with all the required information for representing this {@code elementDeclaration}
    * element in the DSL and binding it to its {@link ExtensionModel model} component or {@link MetadataType}.
    * <p>
    * This resolution can only be performed from DSL top-level-elements, which have global representations
    * in the {@link ExtensionModel}, so this method will return an {@link Optional#empty} result if the
    * given {@code applicationElement} does not identify either a {@link ConfigurationModel},
-   * {@link OperationModel}, {@link SourceModel} or an {@link ObjectType} than can be expressed as
-   * an explicit top level element.
-   * <p>
-   * <p>
-   * <p>
-   * //TODO
+   * {@link OperationModel}, {@link SourceModel}
    *
-   * @param componentConfiguration the {@link ComponentConfiguration} for which its {@link DslElementModel}
-   *                               representation is required.
-   * @param <T>                    the expected model type of the {@link DslElementModel element}
-   * @return a {@link DslElementModel} representation of the {@link ComponentConfiguration} if one
+   * @param elementDeclaration the {@link ElementDeclaration} for which its {@link DslElementModel}
+   *                           representation is required.
+   * @param <T>                the expected model type of the {@link DslElementModel element}
+   * @return a {@link DslElementModel} representation of the {@link ElementDeclaration} if one
    * is possible to be built based on the {@link ExtensionModel extensions} provided as
    * resolution context, or {@link Optional#empty} if no {@link DslElementModel} could be created
    * for the given {@code applicationElement} with the current extensions context.
    */
-  DslElementModel<ConfigurationModel> create(ConfigurationElementDeclaration configurationDeclaration);
-
-  <T extends org.mule.runtime.api.meta.model.ComponentModel> DslElementModel<T> create(ComponentElementDeclaration declaration);
+  <T> Optional<DslElementModel<T>> create(ElementDeclaration elementDeclaration);
 
   /**
    * Resolves the {@link DslElementModel} for the given {@link ComponentConfiguration applicationElement},

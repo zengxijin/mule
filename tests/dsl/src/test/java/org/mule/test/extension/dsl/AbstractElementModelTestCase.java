@@ -8,15 +8,12 @@ package org.mule.test.extension.dsl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.of;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import org.mule.functional.junit4.MuleArtifactFunctionalTestCase;
-import org.mule.runtime.dsl.api.component.config.ArtifactConfiguration;
-import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
-import org.mule.runtime.dsl.api.component.config.ComponentIdentifier;
+import org.mule.runtime.api.app.declaration.ArtifactDeclaration;
 import org.mule.runtime.api.meta.NamedObject;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.XmlDslModel;
@@ -30,6 +27,8 @@ import org.mule.runtime.config.spring.dsl.processor.ConfigFile;
 import org.mule.runtime.config.spring.dsl.processor.ConfigLine;
 import org.mule.runtime.config.spring.dsl.processor.xml.XmlApplicationParser;
 import org.mule.runtime.core.registry.SpiServiceRegistry;
+import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
+import org.mule.runtime.dsl.api.component.config.ComponentIdentifier;
 import org.mule.runtime.extension.api.dsl.DslResolvingContext;
 import org.mule.test.runner.ArtifactClassLoaderRunnerConfig;
 
@@ -42,7 +41,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -159,7 +157,7 @@ public abstract class AbstractElementModelTestCase extends MuleArtifactFunctiona
         .addConfigFile(new ConfigFile(getConfigFile(), singletonList(configLine)))
         .build();
 
-    return new ApplicationModel(artifactConfig, new ArtifactConfiguration(emptyList()));
+    return new ApplicationModel(artifactConfig, new ArtifactDeclaration());
   }
 
   protected void addSchemaLocation(ExtensionModel extension) {
@@ -178,7 +176,7 @@ public abstract class AbstractElementModelTestCase extends MuleArtifactFunctiona
                                             location);
   }
 
-  protected String write() throws TransformerException {
+  protected String write() throws Exception {
     // write the content into xml file
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 

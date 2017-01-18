@@ -7,13 +7,11 @@
 package org.mule.runtime.config.spring.dsl.model.internal;
 
 import static java.util.stream.Collectors.toMap;
-import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
-import org.mule.runtime.api.app.declaration.ComponentElementDeclaration;
-import org.mule.runtime.api.app.declaration.ConfigurationElementDeclaration;
+import org.mule.runtime.api.app.declaration.ElementDeclaration;
 import org.mule.runtime.api.meta.model.ExtensionModel;
-import org.mule.runtime.api.meta.model.config.ConfigurationModel;
 import org.mule.runtime.config.spring.dsl.model.DslElementModel;
 import org.mule.runtime.config.spring.dsl.model.DslElementModelFactory;
+import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
 import org.mule.runtime.extension.api.dsl.DslResolvingContext;
 import org.mule.runtime.extension.api.dsl.syntax.resolver.DslSyntaxResolver;
 
@@ -42,18 +40,8 @@ public class DefaultDslElementModelFactory implements DslElementModelFactory {
    * {@inheritDoc}
    */
   @Override
-  public <T extends org.mule.runtime.api.meta.model.ComponentModel> DslElementModel<T> create(
-                                                                                              ComponentElementDeclaration componentDeclaration) {
-
+  public <T> Optional<DslElementModel<T>> create(ElementDeclaration componentDeclaration) {
     return declarationBasedDelegate.create(componentDeclaration);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public DslElementModel<ConfigurationModel> create(ConfigurationElementDeclaration configurationDeclaration) {
-    return declarationBasedDelegate.create(configurationDeclaration);
   }
 
   /**

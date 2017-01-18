@@ -18,6 +18,7 @@ import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_POLICY_PROV
 import static org.mule.runtime.core.config.bootstrap.ArtifactType.APP;
 import static org.mule.runtime.core.util.ClassUtils.withContextClassLoader;
 import static org.mule.runtime.core.util.UUID.getUUID;
+import org.mule.runtime.api.app.declaration.ArtifactDeclaration;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.MuleContext;
@@ -35,7 +36,6 @@ import org.mule.runtime.deployment.model.api.artifact.ArtifactContextConfigurati
 import org.mule.runtime.deployment.model.api.artifact.MuleContextServiceConfigurator;
 import org.mule.runtime.deployment.model.api.domain.Domain;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPlugin;
-import org.mule.runtime.dsl.api.component.config.ArtifactConfiguration;
 import org.mule.runtime.module.artifact.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.serializer.ArtifactObjectSerializer;
 import org.mule.runtime.module.deployment.impl.internal.application.ApplicationExtensionsManagerConfigurationBuilder;
@@ -77,7 +77,7 @@ public class ArtifactContextBuilder {
   private List<ArtifactPlugin> artifactPlugins = new ArrayList<>();
   private ArtifactType artifactType = APP;
   private String[] configurationFiles = new String[0];
-  private ArtifactConfiguration artifactConfiguration;
+  private ArtifactDeclaration artifactDeclaration;
   private Map<String, String> artifactProperties = new HashMap<>();
   private String artifactName = getUUID();
   private MuleContextBuilder muleContextBuilder;
@@ -140,11 +140,11 @@ public class ArtifactContextBuilder {
   }
 
   /**
-   * @param artifactConfiguration
+   * @param artifactDeclaration
    * @return
    */
-  public ArtifactContextBuilder setArtifactConfiguration(ArtifactConfiguration artifactConfiguration) {
-    this.artifactConfiguration = artifactConfiguration;
+  public ArtifactContextBuilder setArtifactDeclaration(ArtifactDeclaration artifactDeclaration) {
+    this.artifactDeclaration = artifactDeclaration;
     return this;
   }
 
@@ -351,7 +351,7 @@ public class ArtifactContextBuilder {
                 ArtifactContextConfiguration.builder()
                     .setMuleContext(muleContext)
                     .setConfigResources(configurationFiles)
-                    .setArtifactConfiguration(artifactConfiguration)
+                    .setArtifactDeclaration(artifactDeclaration)
                     .setArtifactProperties(artifactProperties)
                     .setArtifactType(artifactType)
                     .setEnableLazyInitialization(enableLazyInit)

@@ -24,9 +24,12 @@ import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.c
 import org.mule.runtime.api.app.declaration.ArtifactDeclaration;
 import org.mule.runtime.api.app.declaration.FlowElementDeclaration;
 import org.mule.runtime.api.app.declaration.fluent.ElementConfigurationDeclarer;
+import org.mule.runtime.api.meta.model.parameter.ParameterizedModel;
+import org.mule.runtime.config.spring.dsl.model.DslElementModel;
 import org.mule.runtime.config.spring.dsl.model.XmlDslElementModelConverter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +45,7 @@ public class DeclarationIntegrationDslModelSerializerTestCase extends AbstractEl
     ElementConfigurationDeclarer db = ElementConfigurationDeclarer.forExtension("Database");
     ElementConfigurationDeclarer http = ElementConfigurationDeclarer.forExtension("HTTP");
 
-    applicationDeclaration = newApp("sampleApp")
+    applicationDeclaration = newApp()
         .withConfig(db.newConfiguration("config")
             .withRefName("dbConfig")
             .withConnection(db.newConnection("derby-connection")
@@ -148,15 +151,19 @@ public class DeclarationIntegrationDslModelSerializerTestCase extends AbstractEl
     XmlDslElementModelConverter converter = XmlDslElementModelConverter.getDefault(this.doc);
 
     applicationDeclaration.getConfigs()
-        .forEach(declaration -> doc.getDocumentElement()
-            .appendChild(converter.asXml(modelResolver.create(declaration))));
+        .forEach(declaration -> {
+          Optional<DslElementModel<ParameterizedModel>> e = modelResolver.create(declaration);
+          doc.getDocumentElement().appendChild(converter.asXml(e.orElse(null)));
+        });
 
     applicationDeclaration.getFlows()
         .forEach(flowDeclaration -> {
           Element flow = createFlowNode(flowDeclaration);
           flowDeclaration.getComponents()
-              .forEach(component -> flow
-                  .appendChild(converter.asXml(modelResolver.create(component))));
+              .forEach(component -> {
+                Optional<DslElementModel<ParameterizedModel>> e = modelResolver.create(component);
+                flow.appendChild(converter.asXml(e.orElse(null)));
+              });
         });
 
     // artifact declaration should be aware of its dependencies?

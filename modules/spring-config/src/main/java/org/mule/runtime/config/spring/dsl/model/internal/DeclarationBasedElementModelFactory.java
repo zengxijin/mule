@@ -10,7 +10,6 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
-import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.mule.runtime.api.dsl.DslConstants.CONFIG_ATTRIBUTE_NAME;
 import static org.mule.runtime.api.dsl.DslConstants.NAME_ATTRIBUTE_NAME;
 import static org.mule.runtime.api.dsl.DslConstants.VALUE_ATTRIBUTE_NAME;
@@ -29,12 +28,14 @@ import org.mule.metadata.api.visitor.MetadataTypeVisitor;
 import org.mule.runtime.api.app.declaration.ComponentElementDeclaration;
 import org.mule.runtime.api.app.declaration.ConfigurationElementDeclaration;
 import org.mule.runtime.api.app.declaration.ConnectionElementDeclaration;
+import org.mule.runtime.api.app.declaration.ElementDeclaration;
 import org.mule.runtime.api.app.declaration.ParameterElementDeclaration;
 import org.mule.runtime.api.app.declaration.ParameterValue;
 import org.mule.runtime.api.app.declaration.ParameterValueVisitor;
 import org.mule.runtime.api.app.declaration.ParameterizedElementDeclaration;
 import org.mule.runtime.api.app.declaration.fluent.ParameterListValue;
 import org.mule.runtime.api.app.declaration.fluent.ParameterObjectValue;
+import org.mule.runtime.api.meta.NamedObject;
 import org.mule.runtime.api.meta.model.ComponentModel;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.config.ConfigurationModel;
@@ -59,6 +60,7 @@ import org.mule.runtime.extension.api.dsl.syntax.resolver.DslSyntaxResolver;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Default implementation of a {@link DslElementModelFactory}
@@ -79,71 +81,78 @@ class DeclarationBasedElementModelFactory {
     this.infrastructureDelegate = new InfrastructureElementModelDelegate();
   }
 
-  public <T extends org.mule.runtime.api.meta.model.ComponentModel> DslElementModel<T> create(
-                                                                                              ComponentElementDeclaration declaration) {
+  public <T> Optional<DslElementModel<T>> create(ElementDeclaration declaration) {
 
     setupCurrentExtensionContext(declaration.getDeclaringExtension());
+    final Function<NamedObject, Boolean> equalsName = (named) -> named.getName().equals(declaration.getName());
 
-    ComponentModel component = findComponentModel(declaration);
-    DslElementSyntax configDsl = dsl.resolve(component);
-
-    ComponentConfiguration.Builder configuration = ComponentConfiguration.builder()
-        .withIdentifier(asIdentifier(configDsl));
-
-    declaration.getConfigRef().ifPresent(ref -> configuration.withParameter(CONFIG_ATTRIBUTE_NAME, ref));
-
-    DslElementModel.Builder<? extends org.mule.runtime.api.meta.model.ComponentModel> element =
-        createParameterizedElementModel(component, configDsl, declaration, configuration);
-
-    return (DslElementModel<T>) element.withConfig(configuration.build()).build();
-  }
-
-  private ComponentModel findComponentModel(final ComponentElementDeclaration declaration) {
-    Reference<ComponentModel> component = new Reference<>();
+    Reference<DslElementModel> elementModel = new Reference<>();
     new ExtensionWalker() {
 
       @Override
+      protected void onConfiguration(ConfigurationModel model) {
+        if (equalsName.apply(model)) {
+          elementModel.set(createConfigurationElement(model, declaration));
+          stop();
+        }
+      }
+
+      @Override
       protected void onOperation(HasOperationModels owner, OperationModel model) {
-        if (model.getName().equals(declaration.getName())) {
-          component.set(model);
+        if (equalsName.apply(model)) {
+          elementModel.set(createComponentElement(model, declaration));
           stop();
         }
       }
 
       @Override
       protected void onSource(HasSourceModels owner, SourceModel model) {
-        if (model.getName().equals(declaration.getName())) {
-          component.set(model);
+        if (equalsName.apply(model)) {
+          elementModel.set(createComponentElement(model, declaration));
           stop();
         }
       }
+
     }.walk(currentExtension);
 
-    checkArgument(component.get() != null, format("No component named '%s' was found for extension '%s'",
-                                                  declaration.getName(), currentExtension.getName()));
-    return component.get();
+    return Optional.ofNullable(elementModel.get());
   }
 
-  public DslElementModel<ConfigurationModel> create(ConfigurationElementDeclaration configurationDeclaration) {
-    setupCurrentExtensionContext(configurationDeclaration.getDeclaringExtension());
-
-    ConfigurationModel model = currentExtension.getConfigurationModel(configurationDeclaration.getName())
-        .orElseThrow(() -> new IllegalArgumentException());
-
-    checkArgument(!isBlank(configurationDeclaration.getRefName()),
-                  format("Missing 'name' declaration for config '%s'", configurationDeclaration.getName()));
+  private DslElementModel<ConfigurationModel> createConfigurationElement(ConfigurationModel model,
+                                                                         ElementDeclaration declaration) {
+    checkArgument(declaration instanceof ConfigurationElementDeclaration,
+                  format("The name '%s' refers to an ConfigurationModel, but it was not declared as a Component",
+                         declaration.getName()));
 
     DslElementSyntax configDsl = dsl.resolve(model);
+    ConfigurationElementDeclaration configDeclaration = (ConfigurationElementDeclaration) declaration;
+
     ComponentConfiguration.Builder configuration = ComponentConfiguration.builder()
         .withIdentifier(asIdentifier(configDsl))
-        .withParameter(NAME_ATTRIBUTE_NAME, configurationDeclaration.getRefName());
+        .withParameter(NAME_ATTRIBUTE_NAME, configDeclaration.getRefName());
 
     DslElementModel.Builder<ConfigurationModel> element =
-        createParameterizedElementModel(model, configDsl, configurationDeclaration, configuration);
+        createParameterizedElementModel(model, configDsl, configDeclaration, configuration);
 
-    configurationDeclaration.getConnection()
+    configDeclaration.getConnection()
         .ifPresent(connection -> addConnectionProvider(connection, model, configuration, element));
 
+    return element.withConfig(configuration.build()).build();
+  }
+
+  private DslElementModel<? extends ComponentModel> createComponentElement(ComponentModel model, ElementDeclaration declaration) {
+    checkArgument(declaration instanceof ComponentElementDeclaration,
+                  format("The name '%s' refers to a ComponentModel, but it was not declared as a Component",
+                         declaration.getName()));
+    DslElementSyntax configDsl = dsl.resolve(model);
+    ComponentConfiguration.Builder configuration = ComponentConfiguration.builder()
+        .withIdentifier(asIdentifier(configDsl));
+    ComponentElementDeclaration componentDeclaration = (ComponentElementDeclaration) declaration;
+    componentDeclaration.getConfigRef()
+        .ifPresent(ref -> configuration.withParameter(CONFIG_ATTRIBUTE_NAME, ref));
+
+    DslElementModel.Builder<? extends ComponentModel> element =
+        createParameterizedElementModel(model, configDsl, componentDeclaration, configuration);
     return element.withConfig(configuration.build()).build();
   }
 
@@ -407,10 +416,6 @@ class DeclarationBasedElementModelFactory {
             createObject(objectType, objectValue, itemDsl, parentConfig, parentElement);
           }
 
-          @Override
-          public void visitDictionary(DictionaryType dictionaryType) {
-            // TODO
-          }
         });
       }
     });
@@ -453,13 +458,7 @@ class DeclarationBasedElementModelFactory {
           public void visitObject(ObjectType objectType) {
             createObject(objectType, objectValue, fieldDsl, objectConfig, objectElement);
           }
-
-          @Override
-          public void visitDictionary(DictionaryType dictionaryType) {
-            //TODO
-          }
         });
-
       }
     });
   }
