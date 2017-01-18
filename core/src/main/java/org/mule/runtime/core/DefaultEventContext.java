@@ -70,8 +70,7 @@ public final class DefaultEventContext implements EventContext, Serializable {
    * @return a new child context
    */
   public static EventContext child(EventContext parent) {
-    return parent instanceof CoreEventContext ? new ChildCoreEventContext((CoreEventContext) parent)
-        : new ChildEventContext(parent);
+    return new ChildEventContext(parent);
   }
 
   private final String id;
@@ -214,6 +213,21 @@ public final class DefaultEventContext implements EventContext, Serializable {
     }
 
     @Override
+    public ProcessingTime getProcessingTime() {
+      return parent.getProcessingTime();
+    }
+
+    @Override
+    public ProcessorsTrace getProcessorsTrace() {
+      return parent.getProcessorsTrace();
+    }
+
+    @Override
+    public boolean isCorrelationIdFromSource() {
+      return parent.isCorrelationIdFromSource();
+    }
+
+    @Override
     public void success() {
       monoProcessor.onComplete();
     }
@@ -245,31 +259,6 @@ public final class DefaultEventContext implements EventContext, Serializable {
       monoProcessor.subscribe(s);
     }
 
-  }
-
-  private static class ChildCoreEventContext extends ChildEventContext implements CoreEventContext {
-
-    private CoreEventContext parent;
-
-    private ChildCoreEventContext(CoreEventContext parent) {
-      super(parent);
-      this.parent = parent;
-    }
-
-    @Override
-    public ProcessingTime getProcessingTime() {
-      return parent.getProcessingTime();
-    }
-
-    @Override
-    public ProcessorsTrace getProcessorsTrace() {
-      return parent.getProcessorsTrace();
-    }
-
-    @Override
-    public boolean isCorrelationIdFromSource() {
-      return parent.isCorrelationIdFromSource();
-    }
   }
 
 }
