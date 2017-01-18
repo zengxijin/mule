@@ -78,7 +78,8 @@ public class Flow extends AbstractPipeline implements Processor, DynamicPipeline
       }
     } else {
       try {
-        return just(event).transform(this).block();
+        just(event).transform(processFlowFunction()).subscribe();
+        return Mono.from(event.getContext()).block();
       } catch (Exception e) {
         throw rxExceptionToMuleException(e);
       }
