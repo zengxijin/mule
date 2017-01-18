@@ -64,8 +64,8 @@ import org.mule.runtime.core.registry.SpiServiceRegistry;
 import org.mule.runtime.core.util.IOUtils;
 import org.mule.runtime.core.util.collection.ImmutableListCollector;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinitionProvider;
-import org.mule.runtime.api.dsl.config.ComponentIdentifier;
-import org.mule.runtime.api.dsl.config.ArtifactConfiguration;
+import org.mule.runtime.dsl.api.component.config.ComponentIdentifier;
+import org.mule.runtime.dsl.api.component.config.ArtifactConfiguration;
 import org.mule.runtime.dsl.api.xml.XmlNamespaceInfo;
 import org.mule.runtime.dsl.api.xml.XmlNamespaceInfoProvider;
 

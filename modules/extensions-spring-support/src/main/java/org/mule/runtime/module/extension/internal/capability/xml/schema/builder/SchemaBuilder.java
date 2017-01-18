@@ -15,7 +15,7 @@ import static org.mule.runtime.api.dsl.DslConstants.NAME_ATTRIBUTE_NAME;
 import static org.mule.runtime.api.dsl.DslConstants.VALUE_ATTRIBUTE_NAME;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import static org.mule.runtime.api.meta.ExpressionSupport.SUPPORTED;
-import static org.mule.runtime.extension.api.ExtensionConstants.TLS_ATTRIBUTE_NAME;
+import static org.mule.runtime.extension.api.ExtensionConstants.TLS_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.declaration.type.TypeUtils.isContent;
 import static org.mule.runtime.extension.api.util.ExtensionMetadataTypeUtils.getId;
 import static org.mule.runtime.extension.api.util.ExtensionModelUtils.isContent;
@@ -62,10 +62,10 @@ import org.mule.runtime.api.tls.TlsContextFactory;
 import org.mule.runtime.core.util.StringUtils;
 import org.mule.runtime.extension.api.declaration.type.ExtensionsTypeLoaderFactory;
 import org.mule.runtime.extension.api.dsl.syntax.DslElementSyntax;
-import org.mule.runtime.extension.api.dsl.syntax.resolver.DslResolvingContext;
+import org.mule.runtime.extension.api.dsl.DslResolvingContext;
 import org.mule.runtime.extension.api.dsl.syntax.resolver.DslSyntaxResolver;
 import org.mule.runtime.extension.api.tx.OperationTransactionalAction;
-import org.mule.runtime.extension.api.util.SubTypesMappingContainer;
+import org.mule.runtime.extension.api.type.SubTypesMappingContainer;
 import org.mule.runtime.extension.internal.property.InfrastructureParameterModelProperty;
 import org.mule.runtime.extension.internal.property.QNameModelProperty;
 import org.mule.runtime.extension.internal.util.ParameterModelComparator;
@@ -592,7 +592,7 @@ public final class SchemaBuilder {
       requiresTls = true;
     }
 
-    addAttributeAndElement(extensionType, childElements, TLS_ATTRIBUTE_NAME, TLS_CONTEXT_TYPE);
+    addAttributeAndElement(extensionType, childElements, TLS_PARAMETER_NAME, TLS_CONTEXT_TYPE);
   }
 
   private void addAttributeAndElement(ExtensionType extensionType, List<TopLevelElement> childElements,

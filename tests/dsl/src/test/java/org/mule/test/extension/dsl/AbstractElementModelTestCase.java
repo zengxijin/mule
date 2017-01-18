@@ -14,28 +14,28 @@ import static java.util.Optional.of;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import org.mule.functional.junit4.MuleArtifactFunctionalTestCase;
-import org.mule.runtime.api.dsl.config.ArtifactConfiguration;
-import org.mule.runtime.api.dsl.config.ComponentConfiguration;
-import org.mule.runtime.api.dsl.config.ComponentIdentifier;
+import org.mule.runtime.dsl.api.component.config.ArtifactConfiguration;
+import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
+import org.mule.runtime.dsl.api.component.config.ComponentIdentifier;
 import org.mule.runtime.api.meta.NamedObject;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.XmlDslModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterizedModel;
 import org.mule.runtime.config.spring.XmlConfigurationDocumentLoader;
 import org.mule.runtime.config.spring.dsl.model.ApplicationModel;
+import org.mule.runtime.config.spring.dsl.model.DslElementModel;
+import org.mule.runtime.config.spring.dsl.model.DslElementModelFactory;
 import org.mule.runtime.config.spring.dsl.processor.ArtifactConfig;
 import org.mule.runtime.config.spring.dsl.processor.ConfigFile;
 import org.mule.runtime.config.spring.dsl.processor.ConfigLine;
 import org.mule.runtime.config.spring.dsl.processor.xml.XmlApplicationParser;
 import org.mule.runtime.core.registry.SpiServiceRegistry;
-import org.mule.runtime.extension.api.dsl.model.DslElementModel;
-import org.mule.runtime.extension.api.dsl.model.DslElementModelResolver;
+import org.mule.runtime.extension.api.dsl.DslResolvingContext;
 import org.mule.test.runner.ArtifactClassLoaderRunnerConfig;
 
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -74,7 +74,7 @@ public abstract class AbstractElementModelTestCase extends MuleArtifactFunctiona
   protected static final int REQUESTER_PATH = 3;
 
   protected ApplicationModel applicationModel;
-  protected DslElementModelResolver modelResolver;
+  protected DslElementModelFactory modelResolver;
   protected Document doc;
 
   @Override
@@ -85,14 +85,13 @@ public abstract class AbstractElementModelTestCase extends MuleArtifactFunctiona
   @Before
   public void setup() throws Exception {
     applicationModel = loadApplicationModel();
-
-    Set<ExtensionModel> extensions = muleContext.getExtensionManager().getExtensions();
-    modelResolver = DslElementModelResolver.getDefault(extensions);
+    modelResolver =
+        DslElementModelFactory.getDefault(DslResolvingContext.getDefault(muleContext.getExtensionManager().getExtensions()));
   }
 
   // Scaffolding
   protected <T extends NamedObject> DslElementModel<T> resolve(ComponentConfiguration component) {
-    Optional<DslElementModel<T>> elementModel = modelResolver.resolve(component);
+    Optional<DslElementModel<T>> elementModel = modelResolver.create(component);
     assertThat(elementModel.isPresent(), is(true));
     return elementModel.get();
   }
@@ -163,20 +162,20 @@ public abstract class AbstractElementModelTestCase extends MuleArtifactFunctiona
     return new ApplicationModel(artifactConfig, new ArtifactConfiguration(emptyList()));
   }
 
-  protected void addSchemaLocation(Document document, ExtensionModel extension) {
+  protected void addSchemaLocation(ExtensionModel extension) {
 
     XmlDslModel xmlDslModel = extension.getXmlDslModel();
     String location = xmlDslModel.getNamespaceUri() + " " + xmlDslModel.getSchemaLocation();
 
-    Attr schemaLocation = document.getDocumentElement().getAttributeNodeNS("http://www.w3.org/2001/XMLSchema-instance",
-                                                                           "schemaLocation");
+    Attr schemaLocation = doc.getDocumentElement().getAttributeNodeNS("http://www.w3.org/2001/XMLSchema-instance",
+                                                                      "schemaLocation");
     if (schemaLocation != null) {
       location = schemaLocation.getValue().concat(" ").concat(location);
     }
 
-    document.getDocumentElement().setAttributeNS("http://www.w3.org/2001/XMLSchema-instance",
-                                                 "xsi:schemaLocation",
-                                                 location);
+    doc.getDocumentElement().setAttributeNS("http://www.w3.org/2001/XMLSchema-instance",
+                                            "xsi:schemaLocation",
+                                            location);
   }
 
   protected String write() throws TransformerException {
@@ -198,7 +197,7 @@ public abstract class AbstractElementModelTestCase extends MuleArtifactFunctiona
     return writer.getBuffer().toString().replaceAll("\n|\r", "");
   }
 
-  protected void initializeMuleApp() throws ParserConfigurationException {
+  protected void createAppDocument() throws ParserConfigurationException {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
     DocumentBuilder docBuilder = factory.newDocumentBuilder();
@@ -208,6 +207,7 @@ public abstract class AbstractElementModelTestCase extends MuleArtifactFunctiona
     doc.appendChild(mule);
     mule.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.mulesoft.org/schema/mule/core");
     mule.setAttributeNS("http://www.w3.org/2001/XMLSchema-instance", "xsi:schemaLocation",
-                        "http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd");
+                        "http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd");
   }
+
 }

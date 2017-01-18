@@ -6,7 +6,7 @@
  */
 package org.mule.runtime.module.tooling.api.connectivity;
 
-import org.mule.runtime.api.dsl.config.ArtifactConfiguration;
+import org.mule.runtime.dsl.api.component.config.ArtifactConfiguration;
 import org.mule.runtime.core.api.connectivity.ConnectivityTestingService;
 
 /**

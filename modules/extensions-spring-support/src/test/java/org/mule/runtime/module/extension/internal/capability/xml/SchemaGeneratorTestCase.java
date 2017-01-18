@@ -6,6 +6,7 @@
  */
 package org.mule.runtime.module.extension.internal.capability.xml;
 
+import static com.google.common.collect.ImmutableSet.copyOf;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
@@ -17,8 +18,10 @@ import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.c
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.XmlDslModel;
 import org.mule.runtime.core.api.registry.ServiceRegistry;
-import org.mule.runtime.extension.api.dsl.syntax.resolver.DslResolvingContext;
+import org.mule.runtime.extension.api.dsl.DslResolvingContext;
 import org.mule.runtime.extension.api.loader.DeclarationEnricher;
+import org.mule.runtime.extension.api.type.TypeCatalog;
+import org.mule.runtime.extension.internal.type.DefaultTypeCatalog;
 import org.mule.runtime.module.extension.internal.capability.xml.schema.SchemaGenerator;
 import org.mule.runtime.module.extension.internal.loader.enricher.JavaXmlDeclarationEnricher;
 import org.mule.runtime.module.extension.internal.runtime.connectivity.basic.GlobalInnerPojoConnector;
@@ -44,6 +47,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.junit.Before;
@@ -128,6 +132,16 @@ public class SchemaGeneratorTestCase extends AbstractMuleTestCase {
     @Override
     public Optional<ExtensionModel> getExtension(String name) {
       return ofNullable(extensionModels.get(name));
+    }
+
+    @Override
+    public Set<ExtensionModel> getExtensions() {
+      return copyOf(extensionModels.values());
+    }
+
+    @Override
+    public TypeCatalog getTypeCatalog() {
+      return new DefaultTypeCatalog(copyOf(extensionModels.values()));
     }
   }
 

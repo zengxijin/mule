@@ -36,10 +36,11 @@ import org.mule.runtime.core.api.extension.ExtensionManager;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition.Builder;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinitionProvider;
+import org.mule.runtime.extension.api.dsl.DslResolvingContext;
 import org.mule.runtime.extension.api.dsl.syntax.DslElementSyntax;
 import org.mule.runtime.extension.api.dsl.syntax.resolver.DslSyntaxResolver;
 import org.mule.runtime.extension.api.runtime.ExpirationPolicy;
-import org.mule.runtime.extension.api.util.SubTypesMappingContainer;
+import org.mule.runtime.extension.api.type.SubTypesMappingContainer;
 import org.mule.runtime.module.extension.internal.config.ExtensionConfig;
 import org.mule.runtime.module.extension.internal.config.dsl.config.ConfigurationDefinitionParser;
 import org.mule.runtime.module.extension.internal.config.dsl.connection.ConnectionProviderDefinitionParser;
@@ -150,7 +151,7 @@ public class ExtensionBuildingDefinitionProvider implements ComponentBuildingDef
     final Builder definitionBuilder =
         new Builder().withNamespace(xmlDslModel.getNamespace());
     final DslSyntaxResolver dslSyntaxResolver =
-        DslSyntaxResolver.getDefault(extensionModel, new DefaultDslContext(extensionManager));
+        DslSyntaxResolver.getDefault(extensionModel, DslResolvingContext.getDefault(extensionManager.getExtensions()));
 
     final ClassLoader extensionClassLoader = getClassLoader(extensionModel);
     withContextClassLoader(extensionClassLoader, () -> {

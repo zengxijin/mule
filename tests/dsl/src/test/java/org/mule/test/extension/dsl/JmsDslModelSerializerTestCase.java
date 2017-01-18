@@ -8,7 +8,7 @@ package org.mule.test.extension.dsl;
 
 import static org.mule.runtime.core.util.IOUtils.getResourceAsString;
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.compareXML;
-import org.mule.runtime.extension.api.dsl.converter.XmlDslElementModelConverter;
+import org.mule.runtime.config.spring.dsl.model.XmlDslElementModelConverter;
 
 import java.io.IOException;
 
@@ -33,7 +33,7 @@ public class JmsDslModelSerializerTestCase extends AbstractElementModelTestCase 
 
   @Before
   public void createDocument() throws Exception {
-    initializeMuleApp();
+    createAppDocument();
 
     this.sendPayload = createFlow(SEND_PAYLOAD_FLOW);
     this.bridge = createFlow(BRIDGE_FLOW);
@@ -70,7 +70,7 @@ public class JmsDslModelSerializerTestCase extends AbstractElementModelTestCase 
     doc.getDocumentElement().appendChild(bridge);
     doc.getDocumentElement().appendChild(receiver);
 
-    muleContext.getExtensionManager().getExtensions().forEach(e -> addSchemaLocation(doc, e));
+    muleContext.getExtensionManager().getExtensions().forEach(this::addSchemaLocation);
 
     String serializationResult = write();
 
