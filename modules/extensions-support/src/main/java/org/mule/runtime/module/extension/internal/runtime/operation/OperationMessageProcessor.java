@@ -27,7 +27,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static reactor.core.publisher.Flux.from;
 import static reactor.core.publisher.Mono.fromCallable;
 import static reactor.core.publisher.Mono.just;
-
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.dsl.config.ComponentIdentifier;
 import org.mule.runtime.api.exception.MuleException;
@@ -45,6 +44,7 @@ import org.mule.runtime.api.metadata.resolving.MetadataResult;
 import org.mule.runtime.core.api.DefaultMuleException;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.extension.ExtensionManager;
+import org.mule.runtime.core.api.interception.ProcessorParameterResolver;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.policy.OperationExecutionFunction;
 import org.mule.runtime.core.policy.OperationPolicy;
@@ -67,7 +67,6 @@ import java.util.Optional;
 
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
-
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 
@@ -93,7 +92,8 @@ import reactor.core.publisher.Mono;
  *
  * @since 3.7.0
  */
-public class OperationMessageProcessor extends ExtensionComponent implements Processor, EntityMetadataProvider, Lifecycle {
+public class OperationMessageProcessor extends ExtensionComponent implements Processor, EntityMetadataProvider,
+    ProcessorParameterResolver, Lifecycle {
 
   private static final Logger LOGGER = getLogger(OperationMessageProcessor.class);
   static final String INVALID_TARGET_MESSAGE =
@@ -141,11 +141,16 @@ public class OperationMessageProcessor extends ExtensionComponent implements Pro
   }
 
   @Override
+  public Map<String, Object> resolve(Event event) throws MuleException {
+    return resolverSet.resolve(event).asMap();
+  }
+
+  @Override
   public Publisher<Event> apply(Publisher<Event> publisher) {
     if (operationModel.isBlocking()) {
       return from(publisher).map(checkedFunction(event -> withContextClassLoader(classLoader, () -> {
         Optional<ConfigurationInstance> configuration = getConfiguration(event);
-        Map<String, Object> operationParameters = resolverSet.resolve(event).asMap();
+        Map<String, Object> operationParameters = resolve(event);
 
         OperationExecutionFunction operationExecutionFunction = (parameters, operationEvent) -> {
           ExecutionContextAdapter operationContext = createExecutionContext(configuration, parameters, operationEvent);
@@ -164,7 +169,7 @@ public class OperationMessageProcessor extends ExtensionComponent implements Pro
 
     return from(publisher).concatMap(checkedFunction(event -> withContextClassLoader(classLoader, () -> {
       Optional<ConfigurationInstance> configuration = getConfiguration(event);
-      Map<String, Object> operationParameters = resolverSet.resolve(event).asMap();
+      Map<String, Object> operationParameters = resolve(event);
       ExecutionContextAdapter operationContext = createExecutionContext(configuration, operationParameters, event);
 
       return doProcess(event, operationContext);

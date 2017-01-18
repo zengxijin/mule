@@ -10,6 +10,7 @@ import org.mule.runtime.core.api.CoreEventContext;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.core.api.interceptor.Interceptor;
+import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.management.stats.ProcessingTime;
 import org.mule.runtime.core.processor.AbstractRequestResponseMessageProcessor;
 
@@ -48,6 +49,11 @@ public abstract class AbstractEnvelopeInterceptor extends AbstractRequestRespons
       resultEvent = last(resultEvent, time, startTime, exceptionWasThrown);
     }
     return resultEvent;
+  }
+
+  @Override
+  public Processor getNext() {
+    return next;
   }
 
 }
