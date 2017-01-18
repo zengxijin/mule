@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -227,6 +228,7 @@ public class FlowTestCase extends AbstractFlowConstructTestCase {
     assertThat(response, not(nullValue()));
   }
 
+  @Ignore
   @Test
   public void testDynamicPipeline() throws Exception {
     flow.initialise();
