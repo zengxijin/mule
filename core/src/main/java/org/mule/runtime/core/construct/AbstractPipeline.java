@@ -68,6 +68,7 @@ import org.mule.runtime.core.api.rx.Exceptions.EventDroppedException;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.apache.commons.collections.Predicate;
@@ -243,8 +244,7 @@ public abstract class AbstractPipeline extends AbstractFlowConstruct implements 
             return pipeline.process(event);
           } else {
             try {
-              just(event).transform(processFlowFunction()).subscribe();
-              return Mono.from(event.getContext()).block();
+              return just(event).transform(this).block();
             } catch (Exception e) {
               throw rxExceptionToMuleException(e);
             }
@@ -253,11 +253,10 @@ public abstract class AbstractPipeline extends AbstractFlowConstruct implements 
 
         @Override
         public Publisher<Event> apply(Publisher<Event> publisher) {
-          return from(publisher).flatMap(event -> {
-            just(event).transform(processFlowFunction()).subscribe();
-            return Mono.from(event.getContext());
-          });
-        }
+          return from(publisher)
+                  .doOnNext(event -> just(event).transform(processFlowFunction()).subscribe())
+                  .flatMap(event -> Mono.from(event.getContext()));
+          }
       });
     }
 
@@ -272,22 +271,23 @@ public abstract class AbstractPipeline extends AbstractFlowConstruct implements 
   }
 
   Function<Publisher<Event>, Publisher<Event>> processFlowFunction() {
-    return stream -> from(stream).transform(pipeline)
+    return stream -> from(stream)
+        .transform(pipeline)
         .doOnNext(response -> response.getContext().success(response))
-        .doOnError(MessagingException.class,
-                   me -> Mono.defer(() -> Mono.from(getExceptionListener().apply(me)))
-                       .doOnNext(event -> event.getContext().success(event))
-                       .doOnError(MessagingException.class, me2 -> me2.getEvent().getContext().error(me2))
-                       .doOnError(UNEXPECTED_EXCEPTION_PREDICATE,
-                                  throwable -> LOGGER.error("Unhandled exception thrown during error handling" +
-                                      throwable))
-                       .subscribe())
-        .doOnError(UNEXPECTED_EXCEPTION_PREDICATE,
-                   throwable -> LOGGER.error("Unhandled exception in async processing " + throwable))
+        .doOnError(MessagingException.class, handleError())
         .onErrorResumeWith(EventDroppedException.class, ede -> {
           ede.getEvent().getContext().success();
           return empty();
-        });
+        })
+        .doOnError(UNEXPECTED_EXCEPTION_PREDICATE,
+                   throwable -> LOGGER.error("Unhandled exception in async processing " + throwable));
+  }
+
+  private Consumer<MessagingException> handleError() {
+    return me -> Mono.defer(() -> Mono.from(getExceptionListener().apply(me)))
+        .doOnNext(event -> event.getContext().success(event))
+        .doOnError(throwable -> me.getEvent().getContext().error(throwable))
+        .subscribe();
   }
 
   protected void configureMessageProcessors(MessageProcessorChainBuilder builder) throws MuleException {

@@ -153,7 +153,7 @@ public final class DefaultEventContext implements EventContext, Serializable {
   }
 
   @Override
-  public void error(MessagingException messagingException) {
+  public void error(Throwable messagingException) {
     monoProcessor.onError(messagingException);
   }
 
@@ -238,8 +238,8 @@ public final class DefaultEventContext implements EventContext, Serializable {
     }
 
     @Override
-    public void error(MessagingException messagingException) {
-      monoProcessor.onError(messagingException);
+    public void error(Throwable throwable) {
+      monoProcessor.onError(throwable);
     }
 
     @Override
