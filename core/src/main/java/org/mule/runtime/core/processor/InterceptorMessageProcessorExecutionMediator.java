@@ -7,6 +7,15 @@
 
 package org.mule.runtime.core.processor;
 
+import static java.lang.String.valueOf;
+import static org.mule.runtime.api.dsl.config.ComponentConfiguration.ANNOTATION_PARAMETERS;
+import static org.mule.runtime.api.dsl.config.ComponentIdentifier.ANNOTATION_NAME;
+import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
+import static org.mule.runtime.core.api.rx.Exceptions.checkedConsumer;
+import static org.mule.runtime.core.api.rx.Exceptions.checkedFunction;
+import static org.mule.runtime.core.internal.util.rx.Operators.nullSafeMap;
+import static reactor.core.publisher.Flux.from;
+import static reactor.core.publisher.Flux.just;
 import org.mule.runtime.api.dsl.config.ComponentIdentifier;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
@@ -23,22 +32,14 @@ import org.mule.runtime.core.api.interception.ProcessorParameterResolver;
 import org.mule.runtime.core.api.message.InternalMessage;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.exception.MessagingException;
-import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static java.lang.String.valueOf;
-import static org.mule.runtime.api.dsl.config.ComponentConfiguration.ANNOTATION_PARAMETERS;
-import static org.mule.runtime.api.dsl.config.ComponentIdentifier.ANNOTATION_NAME;
-import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-import static org.mule.runtime.core.api.rx.Exceptions.checkedConsumer;
-import static org.mule.runtime.core.api.rx.Exceptions.checkedFunction;
-import static org.mule.runtime.core.internal.util.rx.Operators.nullSafeMap;
-import static reactor.core.publisher.Flux.from;
-import static reactor.core.publisher.Flux.just;
+import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Execution mediator for {@link Processor} that intercepts the processor execution with an {@link org.mule.runtime.core.api.interception.MessageProcessorInterceptorCallback interceptor callback}.
@@ -113,27 +114,23 @@ public class InterceptorMessageProcessorExecutionMediator implements MessageProc
    */
   private Publisher<Event> intercept(Publisher<Event> publisher, MessageProcessorInterceptorCallback interceptorCallback,
                                      Map<String, String> parameters, Processor processor) {
+    AtomicReference<Map<String, Object>> parametersHolder = new AtomicReference<>();
     return from(publisher)
         .concatMap(request -> just(request)
-            .map(checkedFunction(event -> Event.builder(event)
-                .message(InternalMessage
-                    .builder(interceptorCallback
-                        .before(event.getMessage(), resolveParameters(event, processor, parameters)))
-                    .build())
-                .build()))
+            .map(checkedFunction(event -> {
+              parametersHolder.set(resolveParameters(event, processor, parameters));
+              return Event.builder(event)
+                  .message(InternalMessage
+                               .builder(interceptorCallback.before(event.getMessage(), parametersHolder.get()))
+                               .build())
+                  .build();}))
             .transform(s -> doTransform(s, interceptorCallback, parameters, processor))
             .map(checkedFunction(result -> Event.builder(result).message(InternalMessage
-                .builder(interceptorCallback
-                    .after(result.getMessage(),
-                           resolveParameters(request,
-                                             processor,
-                                             parameters),
-                           null))
-                .build()).build()))
+                                                                             .builder(interceptorCallback.after(result.getMessage(), parametersHolder.get(), null))
+                                                                             .build()).build()))
             .doOnError(MessagingException.class,
                        checkedConsumer(exception -> interceptorCallback.after(exception.getEvent().getMessage(),
-                                                                              resolveParameters(request, processor,
-                                                                                                parameters),
+                                                                              parametersHolder.get(),
                                                                               exception))));
   }
 
